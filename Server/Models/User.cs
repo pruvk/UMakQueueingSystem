@@ -2,9 +2,12 @@ namespace Server.Models;
 
 public class User
 {
-    public int UserId { get; set; }  // Changed from Id to UserId
+    public int UserId { get; set; }
     public string Username { get; set; } = string.Empty;
     public string PasswordHash { get; set; } = string.Empty;
-    public string Role { get; set; } = "user"; // Default role
-    public DateTime CreatedAt { get; set; }
-} 
+    public string Role { get; set; } = "staff";
+    public string FirstName { get; set; } = string.Empty;
+    public string? MiddleName { get; set; }
+    public string? LastName { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+}
