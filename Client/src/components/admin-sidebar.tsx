@@ -1,6 +1,6 @@
 import * as React from "react"
-import { useLocation, Link } from "react-router-dom"
-import { LayoutDashboard, FileText, Users, Building2 } from "lucide-react"
+import { useLocation, Link, useNavigate } from "react-router-dom"
+import { LayoutDashboard, FileText, Users, Building2, LogOut } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -14,6 +14,8 @@ import {
   SidebarRail,
   SidebarSeparator,
 } from "@/components/ui/sidebar"
+import { Button } from "@/components/ui/button"
+import { ModeToggle } from "@/components/mode-toggle"
 
 const data = {
   navMain: [
@@ -43,10 +45,16 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const location = useLocation()
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    navigate('/login')
+  }
 
   return (
     <Sidebar {...props}>
-      <SidebarContent>
+      <SidebarContent className="flex flex-col h-full">
         <SidebarHeader className="flex items-center justify-between p-2">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary p-2">
@@ -79,6 +87,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarGroupContent>
           </SidebarGroup>
         ))}
+
+        <div className="mt-auto p-4 space-y-4">
+          <div className="flex items-center gap-2">
+            <Button 
+              onClick={handleLogout}
+              className="flex-1"
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Logout
+            </Button>
+            <ModeToggle />
+          </div>
+        </div>
       </SidebarContent>
       <SidebarRail />
     </Sidebar>

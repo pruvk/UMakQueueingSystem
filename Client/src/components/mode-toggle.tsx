@@ -1,5 +1,4 @@
 import { Moon, Sun } from "lucide-react"
-
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -9,11 +8,15 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useTheme } from "@/components/theme-provider"
 
-export function ModeToggle() {
+interface ModeToggleProps {
+  className?: string;
+}
+
+export function ModeToggle({ className }: ModeToggleProps) {
   const { setTheme } = useTheme()
 
   return (
-    <div className="absolute top-4 right-4">
+    <div className={className}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button variant="outline" size="icon">

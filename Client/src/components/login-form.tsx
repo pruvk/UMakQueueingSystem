@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { ModeToggle } from "@/components/mode-toggle"
 
 export function LoginForm() {
   const [username, setUsername] = useState("")
@@ -49,49 +50,52 @@ export function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit}>
-      <Card className="mx-auto max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>
-            Enter your details below to login to your account
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Type your username here"
-                required
-              />
-            </div>
-            <div className="grid gap-2">
-              <div className="flex items-center">
-                <Label htmlFor="password">Password</Label>
+      <div className="relative">
+        <ModeToggle className="absolute top-4 right-4" />
+        <Card className="mx-auto max-w-sm">
+          <CardHeader>
+            <CardTitle className="text-2xl">Login</CardTitle>
+            <CardDescription>
+              Enter your details below to login to your account
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  placeholder="Type your username here"
+                  required
+                />
               </div>
-              <Input 
-                id="password" 
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required 
-              />
-            </div>
-            {error && (
-              <div className="text-sm text-red-500">
-                {error}
+              <div className="grid gap-2">
+                <div className="flex items-center">
+                  <Label htmlFor="password">Password</Label>
+                </div>
+                <Input 
+                  id="password" 
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required 
+                />
               </div>
-            )}
-            <Button type="submit" className="w-full">
-              Login
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+              {error && (
+                <div className="text-sm text-red-500">
+                  {error}
+                </div>
+              )}
+              <Button type="submit" className="w-full">
+                Login
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </form>
   )
 }
