@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'r
 import { ThemeProvider } from "@/components/theme-provider"
 import AdminLayout from './views/Admin/AdminPage'
 import Login from './views/Login'
-import Users from './views/Admin/Users'
+import StaffManagement from './views/Admin/Staffs'
 import Dashboard from './views/Admin/Dashboard'
 
 // Protected Route component
@@ -45,7 +45,7 @@ function App() {
             } 
           >
             <Route path="dashboard" element={<Dashboard />} />
-            <Route path="users" element={<Users />} />
+            <Route path="staffs" element={<StaffManagement />} />
           </Route>
           <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
         </Routes>

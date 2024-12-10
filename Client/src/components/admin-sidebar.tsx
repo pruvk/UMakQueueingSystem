@@ -34,8 +34,8 @@ const data = {
           icon: <FileText className="h-4 w-4" />,
         },
         {
-          title: "User Management",
-          url: "/admin/users",
+          title: "Staff Management",
+          url: "/admin/staffs",
           icon: <Users className="h-4 w-4" />,
         },
       ],

@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/sidebar"
 import Dashboard from './Dashboard'
 import Reports from './Reports'
-import Users from './Users'
+import StaffManagement from './Staffs'
 
 export default function AdminLayout() {
   const location = useLocation()
@@ -26,7 +26,7 @@ export default function AdminLayout() {
     switch(currentPath) {
       case 'dashboard': return 'Dashboard'
       case 'reports': return 'Report Generation'
-      case 'users': return 'User Management'
+      case 'staffs': return 'Staff Management'
       default: return 'Dashboard'
     }
   }
@@ -53,7 +53,7 @@ export default function AdminLayout() {
         <Routes>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="reports" element={<Reports />} />
-          <Route path="users" element={<Users />} />
+          <Route path="staffs" element={<StaffManagement />} />
           <Route path="*" element={<Dashboard />} />
         </Routes>
       </SidebarInset>
