@@ -7,6 +7,7 @@ using System.Text;
 using Server.Data;
 using Server.Models;
 using Server.DTOs;
+using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -126,6 +127,25 @@ using (var scope = app.Services.CreateScope())
         await db.SaveChangesAsync();
     }
 }
+
+app.MapGet("/api/users", [Authorize(Roles = "admin")] async (AuthDbContext db) =>
+{
+    var users = await db.Users
+        .Where(u => u.Role == "staff")
+        .Select(u => new
+        {
+            u.UserId,
+            u.Username,
+            u.FirstName,
+            u.MiddleName,
+            u.LastName,
+            u.Role,
+            u.CreatedAt
+        })
+        .ToListAsync();
+    
+    return Results.Ok(users);
+});
 
 app.Run();
 
