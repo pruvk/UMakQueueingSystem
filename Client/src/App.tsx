@@ -7,8 +7,11 @@ import Login from './views/Login'
 import StaffManagement from './views/Admin/Staffs'
 import Dashboard from './views/Admin/Dashboard'
 import DeviceManagement from './views/Admin/Devices'
+import StaffLayout from './views/Staff/StaffPage'
+import Cashier from './views/Staff/Cashier'
+import Queue from './views/Staff/Queue'
 
-// Protected Route component
+// Protected Route components
 const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
   const token = localStorage.getItem('token');
@@ -31,25 +34,42 @@ const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const ProtectedStaffRoute = ({ children }: { children: React.ReactNode }) => {
+  const navigate = useNavigate();
+  const token = localStorage.getItem('token');
+
+  useEffect(() => {
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    // Decode the JWT token
+    const decoded = JSON.parse(atob(token.split('.')[1]));
+    
+    // Check if user has staff role
+    if (decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] !== 'staff') {
+      navigate('/login');
+    }
+  }, [navigate]);
+
+  return <>{children}</>;
+};
+
 function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <Router>
         <Routes>
           <Route path="/login" element={<Login />} />
-          <Route 
-            path="/admin/*" 
-            element={
-              <ProtectedAdminRoute>
-                <AdminLayout />
-              </ProtectedAdminRoute>
-            } 
-          >
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="staffs" element={<StaffManagement />} />
-            <Route path="devices" element={<DeviceManagement />} />
-          </Route>
-          <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
+          
+          {/* Admin Routes */}
+          <Route path="/admin/*" element={<ProtectedAdminRoute><AdminLayout /></ProtectedAdminRoute>} />
+          
+          {/* Staff Routes - Add the asterisk for nested routes */}
+          <Route path="/staff/*" element={<ProtectedStaffRoute><StaffLayout /></ProtectedStaffRoute>} />
+          
+          <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>
       </Router>
     </ThemeProvider>

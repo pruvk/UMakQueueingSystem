@@ -40,8 +40,16 @@ export function LoginForm() {
       // Store the token in localStorage
       localStorage.setItem("token", data.token)
       
-      // Redirect to admin dashboard
-      navigate("/admin/dashboard")
+      // Decode the token to get the role
+      const decoded = JSON.parse(atob(data.token.split('.')[1]))
+      const role = decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role']
+      
+      // Redirect based on role - staff users go directly to StaffPage
+      if (role === 'admin') {
+        navigate("/admin/dashboard")
+      } else if (role === 'staff') {
+        navigate("/staff")  // This will load StaffPage.tsx directly
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred during login")
       console.error("Login error:", err)
