@@ -118,8 +118,8 @@ using (var scope = app.Services.CreateScope())
     {
         var testUser = new User
         {
-            Username = "test",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("test123"),
+            Username = "admin",
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword("1234"),
             CreatedAt = DateTime.UtcNow
         };
         db.Users.Add(testUser);
