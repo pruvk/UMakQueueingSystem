@@ -101,7 +101,7 @@ app.MapPost("/api/auth/login", async (LoginDto loginDto, AuthDbContext db) =>
         
         return Results.Ok(new { token });
     }
-    catch (Exception ex)
+    catch (Exception)
     {
         return Results.StatusCode(500);
     }
@@ -140,11 +140,85 @@ app.MapGet("/api/users", [Authorize(Roles = "admin")] async (AuthDbContext db) =
             u.MiddleName,
             u.LastName,
             u.Role,
+            Status = "Active",
             u.CreatedAt
         })
         .ToListAsync();
     
     return Results.Ok(users);
+});
+
+app.MapPost("/api/users", [Authorize(Roles = "admin")] async (RegisterDto registerDto, AuthDbContext db) =>
+{
+    if (await db.Users.AnyAsync(u => u.Username == registerDto.Username))
+    {
+        return Results.BadRequest("Username already exists");
+    }
+
+    var passwordHash = BCrypt.Net.BCrypt.HashPassword(registerDto.Password);
+    var user = new User
+    {
+        Username = registerDto.Username,
+        PasswordHash = passwordHash,
+        Role = "staff",
+        FirstName = registerDto.FirstName,
+        MiddleName = registerDto.MiddleName,
+        LastName = registerDto.LastName
+    };
+
+    db.Users.Add(user);
+    await db.SaveChangesAsync();
+
+    return Results.Ok(new
+    {
+        user.UserId,
+        user.Username,
+        user.FirstName,
+        user.MiddleName,
+        user.LastName,
+        user.Role,
+        user.CreatedAt
+    });
+});
+
+app.MapPut("/api/users/{id}", [Authorize(Roles = "admin")] async (int id, UserUpdateDto updateDto, AuthDbContext db) =>
+{
+    var user = await db.Users.FirstOrDefaultAsync(u => u.UserId == id);
+    if (user == null)
+    {
+        return Results.NotFound("User not found");
+    }
+
+    user.FirstName = updateDto.FirstName;
+    user.MiddleName = updateDto.MiddleName;
+    user.LastName = updateDto.LastName;
+
+    await db.SaveChangesAsync();
+
+    return Results.Ok(new
+    {
+        user.UserId,
+        user.Username,
+        user.FirstName,
+        user.MiddleName,
+        user.LastName,
+        user.Role,
+        user.CreatedAt
+    });
+});
+
+app.MapDelete("/api/users/{id}", [Authorize(Roles = "admin")] async (int id, AuthDbContext db) =>
+{
+    var user = await db.Users.FirstOrDefaultAsync(u => u.UserId == id);
+    if (user == null)
+    {
+        return Results.NotFound("User not found");
+    }
+
+    db.Users.Remove(user);
+    await db.SaveChangesAsync();
+
+    return Results.Ok();
 });
 
 app.Run();
