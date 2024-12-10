@@ -221,6 +221,91 @@ app.MapDelete("/api/users/{id}", [Authorize(Roles = "admin")] async (int id, Aut
     return Results.Ok();
 });
 
+// Get all devices
+app.MapGet("/api/devices", [Authorize(Roles = "admin")] async (AuthDbContext db) =>
+{
+    var devices = await db.Devices.Select(d => new
+    {
+        d.DeviceId,
+        d.Username,
+        d.DeviceName,
+        d.DeviceModel,
+        d.DeviceOwner,
+        d.DeviceType,
+        d.CreatedAt
+    }).ToListAsync();
+    
+    return Results.Ok(devices);
+});
+
+// Add new device
+app.MapPost("/api/devices", [Authorize(Roles = "admin")] async (DeviceDto deviceDto, AuthDbContext db) =>
+{
+    var device = new Device
+    {
+        Username = deviceDto.Username,
+        Password = deviceDto.Password,
+        DeviceName = deviceDto.DeviceName,
+        DeviceModel = deviceDto.DeviceModel,
+        DeviceOwner = deviceDto.DeviceOwner,
+        DeviceType = deviceDto.DeviceType.ToLower(),
+    };
+
+    db.Devices.Add(device);
+    await db.SaveChangesAsync();
+
+    return Results.Ok(new
+    {
+        device.DeviceId,
+        device.Username,
+        device.DeviceName,
+        device.DeviceModel,
+        device.DeviceOwner,
+        device.DeviceType,
+        device.CreatedAt
+    });
+});
+
+// Update device
+app.MapPut("/api/devices/{id}", [Authorize(Roles = "admin")] async (int id, DeviceUpdateDto updateDto, AuthDbContext db) =>
+{
+    var device = await db.Devices.FindAsync(id);
+    if (device == null)
+        return Results.NotFound("Device not found");
+
+    device.Username = updateDto.Username;
+    device.DeviceName = updateDto.DeviceName;
+    device.DeviceModel = updateDto.DeviceModel;
+    device.DeviceOwner = updateDto.DeviceOwner;
+    device.DeviceType = updateDto.DeviceType.ToLower();
+
+    await db.SaveChangesAsync();
+
+    return Results.Ok(new
+    {
+        device.DeviceId,
+        device.Username,
+        device.DeviceName,
+        device.DeviceModel,
+        device.DeviceOwner,
+        device.DeviceType,
+        device.CreatedAt
+    });
+});
+
+// Delete device
+app.MapDelete("/api/devices/{id}", [Authorize(Roles = "admin")] async (int id, AuthDbContext db) =>
+{
+    var device = await db.Devices.FindAsync(id);
+    if (device == null)
+        return Results.NotFound("Device not found");
+
+    db.Devices.Remove(device);
+    await db.SaveChangesAsync();
+
+    return Results.Ok();
+});
+
 app.Run();
 
 // Helper method to create JWT token

@@ -17,7 +17,7 @@ import {
 import Dashboard from './Dashboard'
 import Reports from './Reports'
 import StaffManagement from './Staffs'
-
+import DeviceManagement from './Devices'
 export default function AdminLayout() {
   const location = useLocation()
   const currentPath = location.pathname.split('/').pop()
@@ -26,7 +26,8 @@ export default function AdminLayout() {
     switch(currentPath) {
       case 'dashboard': return 'Dashboard'
       case 'reports': return 'Report Generation'
-      case 'staffs': return 'Staff Management'
+      case 'staffs': return 'Staff Management' 
+      case 'devices': return 'Device Management'
       default: return 'Dashboard'
     }
   }
@@ -54,6 +55,7 @@ export default function AdminLayout() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="reports" element={<Reports />} />
           <Route path="staffs" element={<StaffManagement />} />
+          <Route path="devices" element={<DeviceManagement />} />
           <Route path="*" element={<Dashboard />} />
         </Routes>
       </SidebarInset>

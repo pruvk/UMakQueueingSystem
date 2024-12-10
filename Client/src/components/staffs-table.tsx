@@ -35,6 +35,16 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 interface Staff {
   userId: number
@@ -88,6 +98,8 @@ export function StaffsTable({ data, onEdit, onDelete, onAdd }: StaffsTableProps)
   const [currentPage, setCurrentPage] = useState(1)
   const [searchTerm, setSearchTerm] = useState("")
   const itemsPerPage = 4
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [staffToDelete, setStaffToDelete] = useState<Staff | null>(null)
 
   // Filter data based on search term
   const filteredData = data.filter(staff => 
@@ -180,6 +192,19 @@ export function StaffsTable({ data, onEdit, onDelete, onAdd }: StaffsTableProps)
       pages.push(totalPages)
     }
     return pages
+  }
+
+  const handleDeleteClick = (staff: Staff) => {
+    setStaffToDelete(staff)
+    setIsDeleteDialogOpen(true)
+  }
+
+  const handleDelete = () => {
+    if (staffToDelete) {
+      onDelete(staffToDelete)
+      setIsDeleteDialogOpen(false)
+      setStaffToDelete(null)
+    }
   }
 
   return (
@@ -322,8 +347,8 @@ export function StaffsTable({ data, onEdit, onDelete, onAdd }: StaffsTableProps)
                         Edit
                       </DropdownMenuItem>
                       <DropdownMenuItem 
-                        onClick={() => onDelete(staff)}
                         className="text-red-600"
+                        onClick={() => handleDeleteClick(staff)}
                       >
                         <Trash className="mr-2 h-4 w-4" />
                         Delete
@@ -385,6 +410,23 @@ export function StaffsTable({ data, onEdit, onDelete, onAdd }: StaffsTableProps)
           </Pagination>
         </div>
       </div>
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the staff
+              {staffToDelete?.username}.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

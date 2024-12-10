@@ -6,6 +6,7 @@ import AdminLayout from './views/Admin/AdminPage'
 import Login from './views/Login'
 import StaffManagement from './views/Admin/Staffs'
 import Dashboard from './views/Admin/Dashboard'
+import DeviceManagement from './views/Admin/Devices'
 
 // Protected Route component
 const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
@@ -46,6 +47,7 @@ function App() {
           >
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="staffs" element={<StaffManagement />} />
+            <Route path="devices" element={<DeviceManagement />} />
           </Route>
           <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
         </Routes>
