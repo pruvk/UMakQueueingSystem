@@ -64,8 +64,20 @@ export default function Cashier() {
       return
     }
 
+    // Find the next available number by checking existing cashier names
+    const existingNumbers = cashiers.map(c => {
+      const match = c.name.match(/\d+/)
+      return match ? parseInt(match[0]) : 0
+    })
+    
+    // Find the first missing number in sequence
+    let nextNumber = 1
+    while (existingNumbers.includes(nextNumber)) {
+      nextNumber++
+    }
+
     const newCashier = {
-      name: `Cashier ${cashiers.length + 1}`,
+      name: `Cashier ${nextNumber}`,
       currentNumber: "0000",
       status: 'active'
     }
@@ -128,9 +140,12 @@ export default function Cashier() {
   const handleDelete = async () => {
     if (cashierToDelete) {
       try {
-        const response = await fetch("http://localhost:5272/api/cashier/${cashierToDelete.id}", {
-          method: 'DELETE'
-        })
+        const response = await fetch(`http://localhost:5272/api/cashier/${cashierToDelete.id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
 
         if (response.ok) {
           await fetchCashiers() // Refresh the list
@@ -173,69 +188,82 @@ export default function Cashier() {
       </div>
 
       <div className="grid grid-cols-3 gap-4">
-        {cashiers.map((cashier) => (
-          <div
-            key={cashier.id}
-            className="p-6 rounded-xl bg-card border shadow-sm"
-          >
-            <div className="flex flex-col space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">{cashier.name}</h3>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleSetActive(cashier.id)}>
-                      Set Active
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleSetInactive(cashier.id)}>
-                      Set Inactive
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => handleRemove(cashier.id)}
-                      className="text-red-600"
-                    >
-                      Remove
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-              
-              <div className="space-y-2">
-                <div className="text-center">
-                  <p className="text-sm text-muted-foreground">Now Serving</p>
-                  <p className="text-2xl font-bold">{cashier.currentNumber}</p>
+        {cashiers
+          .sort((a, b) => {
+            // Extract numbers from cashier names
+            const aNum = parseInt(a.name.match(/\d+/)?.[0] || '0');
+            const bNum = parseInt(b.name.match(/\d+/)?.[0] || '0');
+            
+            // Special case for Cashier 1
+            if (aNum === 1) return -1;
+            if (bNum === 1) return 1;
+            
+            // Normal numerical sorting for other cashiers
+            return aNum - bNum;
+          })
+          .map((cashier) => (
+            <div
+              key={cashier.id}
+              className="p-6 rounded-xl bg-card border shadow-sm"
+            >
+              <div className="flex flex-col space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">{cashier.name}</h3>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleSetActive(cashier.id)}>
+                        Set Active
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleSetInactive(cashier.id)}>
+                        Set Inactive
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => handleRemove(cashier.id)}
+                        className="text-red-600"
+                      >
+                        Remove
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground">Now Serving</p>
+                    <p className="text-2xl font-bold">{cashier.currentNumber}</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button 
+                    className="flex-1" 
+                    onClick={() => handleNext(cashier.id)}
+                  >
+                    Next
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => handleDone(cashier.id)}
+                  >
+                    Done
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="flex-1"
+                    onClick={() => handleCancel(cashier.id)}
+                  >
+                    Cancel
+                  </Button>
                 </div>
               </div>
-
-              <div className="flex gap-2">
-                <Button 
-                  className="flex-1" 
-                  onClick={() => handleNext(cashier.id)}
-                >
-                  Next
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="flex-1"
-                  onClick={() => handleDone(cashier.id)}
-                >
-                  Done
-                </Button>
-                <Button 
-                  variant="outline" 
-                  className="flex-1"
-                  onClick={() => handleCancel(cashier.id)}
-                >
-                  Cancel
-                </Button>
-              </div>
             </div>
-          </div>
-        ))}
+          ))}
       </div>
 
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
