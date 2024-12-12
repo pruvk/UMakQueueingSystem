@@ -11,6 +11,13 @@ using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add services to the container.
+builder.Services.AddControllers();
+
+// Configure DbContext
+builder.Services.AddDbContext<AuthDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 // Add services
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -44,13 +51,6 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader()
             .AllowCredentials());
 });
-
-// Add DB Context
-builder.Services.AddDbContext<AuthDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 var app = builder.Build();
 
@@ -475,7 +475,7 @@ app.MapDelete("/api/products/{id}", async (AuthDbContext db, int id) =>
 .RequireAuthorization(policy => policy.RequireRole("staff"));
 
 // Get all cashiers
-app.MapGet("/api/cashier", async (ApplicationDbContext db) =>
+app.MapGet("/api/cashier", async (AuthDbContext db) =>
 {
     try
     {
@@ -506,7 +506,7 @@ app.MapGet("/api/cashier", async (ApplicationDbContext db) =>
 .WithOpenApi();
 
 // Add new cashier
-app.MapPost("/api/cashier", async (Cashier cashier, ApplicationDbContext db) =>
+app.MapPost("/api/cashier", async (Cashier cashier, AuthDbContext db) =>
 {
     var count = await db.Cashiers.CountAsync();
     if (count >= 9)
@@ -522,7 +522,7 @@ app.MapPost("/api/cashier", async (Cashier cashier, ApplicationDbContext db) =>
 .WithOpenApi();
 
 // Delete cashier
-app.MapDelete("/api/cashier/{id}", async (int id, ApplicationDbContext db) =>
+app.MapDelete("/api/cashier/{id}", async (int id, AuthDbContext db) =>
 {
     var cashier = await db.Cashiers.FindAsync(id);
     if (cashier == null)

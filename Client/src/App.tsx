@@ -9,7 +9,6 @@ import Dashboard from './views/Admin/Dashboard'
 import DeviceManagement from './views/Admin/Devices'
 import StaffLayout from './views/Staff/StaffPage'
 import Cashier from './views/Staff/Cashier'
-import Queue from './views/Staff/Queue'
 import Inventory from './views/Staff/Inventory'
 import Checkout from './views/Device/Checkout'
 import Cart from './views/Device/Cart'
@@ -95,13 +94,18 @@ function App() {
             <Route path="/login" element={<Login />} />
             
             {/* Admin Routes */}
-            <Route path="/admin/*" element={<ProtectedAdminRoute><AdminLayout /></ProtectedAdminRoute>} />
+            <Route path="/admin" element={<ProtectedAdminRoute><AdminLayout /></ProtectedAdminRoute>}>
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="staffs" element={<StaffManagement />} />
+              <Route path="devices" element={<DeviceManagement />} />
+              <Route path="" element={<Navigate to="/admin/dashboard" replace />} />
+            </Route>
             
             {/* Staff Routes */}
-            <Route path="/staff/*" element={<ProtectedStaffRoute><StaffLayout /></ProtectedStaffRoute>}>
+            <Route path="/staff" element={<ProtectedStaffRoute><StaffLayout /></ProtectedStaffRoute>}>
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="cashier" element={<Cashier />} />
-              <Route path="queue" element={<Queue />} />
+              <Route path="display" element={<Display />} />
               <Route path="inventory" element={<Inventory />} />
               <Route path="" element={<Navigate to="/staff/dashboard" replace />} />
             </Route>
@@ -110,26 +114,12 @@ function App() {
             <Route path="/device/*" element={<ProtectedDeviceRoute><DeviceLayout /></ProtectedDeviceRoute>} />
             <Route path="/device/checkout" element={<ProtectedDeviceRoute><Checkout /></ProtectedDeviceRoute>} />
             <Route path="/device/cart" element={<ProtectedDeviceRoute><Cart /></ProtectedDeviceRoute>} />
-            
 
             <Route path="/" element={<Navigate to="/login" replace />} />
           </Routes>
+          <Toaster />
         </Router>
-        <Toaster />
       </CartProvider>
-      <Router>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          
-          {/* Admin Routes */}
-          <Route path="/admin/*" element={<ProtectedAdminRoute><AdminLayout /></ProtectedAdminRoute>} />
-          
-          {/* Staff Routes */}
-          <Route path="/staff/*" element={<ProtectedStaffRoute><StaffLayout /></ProtectedStaffRoute>} />
-          
-          <Route path="/" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </Router>
     </ThemeProvider>
   )
 }

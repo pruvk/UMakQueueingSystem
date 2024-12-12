@@ -14,6 +14,7 @@ public class AuthDbContext : DbContext
     public DbSet<Product> Products { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<OrderItem> OrderItems { get; set; }
+    public DbSet<Cashier> Cashiers { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -69,6 +70,13 @@ public class AuthDbContext : DbContext
                   .WithMany()
                   .HasForeignKey(e => e.ProductId);
             entity.ToTable("order_items");
+        });
+
+        modelBuilder.Entity<Cashier>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).HasColumnName("cashierId");
+            entity.ToTable("cashiers");
         });
     }
 } 

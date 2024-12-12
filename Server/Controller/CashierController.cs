@@ -9,9 +9,9 @@ namespace Server.Controllers
     [ApiController]
     public class CashierController : ControllerBase
     {
-        private readonly ApplicationDbContext _context;
+        private readonly AuthDbContext _context;
 
-        public CashierController(ApplicationDbContext context)
+        public CashierController(AuthDbContext context)
         {
             _context = context;
         }

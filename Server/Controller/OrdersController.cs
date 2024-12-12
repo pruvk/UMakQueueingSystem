@@ -4,7 +4,7 @@ using Server.Data;
 using Server.DTOs;
 using Server.Models;
 
-namespace Server.Controllers;
+namespace Server.Controller;
 
 [ApiController]
 [Route("api/[controller]")]
