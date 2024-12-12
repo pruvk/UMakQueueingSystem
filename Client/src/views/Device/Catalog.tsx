@@ -7,6 +7,8 @@ import { ShoppingCart, Search, Plus } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { Input } from "@/components/ui/input"
 import { motion } from "framer-motion"
+import { useToast } from "@/hooks/use-toast"
+
 
 type Product = {
   id: number
@@ -25,6 +27,8 @@ export default function DeviceCatalog() {
   const { addItem, items } = useCart()
   const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState("")
+  const { toast } = useToast()
+  const [modifierKeys, setModifierKeys] = useState({ ctrl: false, shift: false })
 
   // Define categories with display names and values
   const categories = [
@@ -76,6 +80,58 @@ export default function DeviceCatalog() {
     fetchProducts()
   }, [navigate])
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Update modifier keys state
+      if (e.key === 'Control') setModifierKeys(prev => ({ ...prev, ctrl: true }))
+      if (e.key === 'Shift') setModifierKeys(prev => ({ ...prev, shift: true }))
+
+      // Check for the complete combination
+      if (e.key === '?' && modifierKeys.ctrl && modifierKeys.shift) {
+        e.preventDefault()
+        
+        // Show confirmation toast
+        toast({
+          title: "Logging out...",
+          description: "You've triggered the secret logout combination",
+          duration: 2000,
+        })
+
+        // Delay logout slightly to show the toast
+        setTimeout(() => {
+          localStorage.removeItem('token')
+          navigate('/login')
+        }, 1000)
+      }
+    }
+
+    const handleKeyUp = (e: KeyboardEvent) => {
+      // Reset modifier keys state
+      if (e.key === 'Control') setModifierKeys(prev => ({ ...prev, ctrl: false }))
+      if (e.key === 'Shift') setModifierKeys(prev => ({ ...prev, shift: false }))
+    }
+
+    // Add event listeners
+    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('keyup', handleKeyUp)
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyUp)
+    }
+  }, [modifierKeys, navigate, toast])
+
+  // Optional: Show subtle visual feedback when modifier keys are pressed
+  useEffect(() => {
+    if (modifierKeys.ctrl && modifierKeys.shift) {
+      // You could add a subtle visual indicator here
+      document.body.style.opacity = '0.98'
+    } else {
+      document.body.style.opacity = '1'
+    }
+  }, [modifierKeys])
+
   const filteredProducts = products
     .filter(product => 
       selectedCategory === "all" || 
@@ -91,7 +147,7 @@ export default function DeviceCatalog() {
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <div className="bg-primary/5 py-8 md:py-12">
-        <div className="container mx-auto px-4">
+        <div className="container mx-auto px-20">
           <div className="mb-8 flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold tracking-tight">UMak Store</h1>
@@ -130,7 +186,7 @@ export default function DeviceCatalog() {
       </div>
 
       {/* Product Grid */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-20 py-8">
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {filteredProducts.map((item) => (
             <motion.div
