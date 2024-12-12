@@ -99,9 +99,6 @@ function App() {
             <Route path="" element={<Navigate to="/staff/dashboard" replace />} />
           </Route>
           
-          {/* Staff Routes - Add the asterisk for nested routes */}
-          <Route path="/staff/*" element={<ProtectedStaffRoute><StaffLayout /></ProtectedStaffRoute>} />
-          
           {/* Device Routes */}
           <Route path="/device/*" element={<ProtectedDeviceRoute><DeviceLayout /></ProtectedDeviceRoute>} />
           
