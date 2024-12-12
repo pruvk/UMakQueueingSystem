@@ -1,6 +1,6 @@
 import * as React from "react"
 import { useLocation, Link, useNavigate } from "react-router-dom"
-import { LayoutDashboard, Building2, LogOut, CreditCard, Users, Package } from "lucide-react"
+import { LayoutDashboard, LogOut, MonitorPlay, Package } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -29,17 +29,17 @@ const data = {
           icon: <LayoutDashboard className="h-4 w-4" />,
         },
         {
-          title: "Queue Management",
-          url: "/staff/queue",
-          icon: <Users className="h-4 w-4" />,
-        },
-        {
           title: "Cashier",
           url: "/staff/cashier",
-          icon: <CreditCard className="h-4 w-4" />,
+          icon: <MonitorPlay className="h-4 w-4" />,
         },
         {
-          title: "Inventory Management",
+          title: "Display",
+          url: "/staff/display",
+          icon: <MonitorPlay className="h-4 w-4" />,
+        },
+        {
+          title: "Inventory",
           url: "/staff/inventory",
           icon: <Package className="h-4 w-4" />,
         },
@@ -63,7 +63,7 @@ export function StaffSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
         <SidebarHeader className="flex items-center justify-between p-2">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary p-2">
-              <Building2 className="h-6 w-6 text-white" />
+              <MonitorPlay className="h-6 w-6 text-white" />
             </div>
             <span className="text-base font-semibold">UMak Coop Queueing System</span>
           </div>

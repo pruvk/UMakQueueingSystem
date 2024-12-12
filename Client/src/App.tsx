@@ -9,7 +9,7 @@ import Dashboard from './views/Admin/Dashboard'
 import DeviceManagement from './views/Admin/Devices'
 import StaffLayout from './views/Staff/StaffPage'
 import Cashier from './views/Staff/Cashier'
-import Queue from './views/Staff/Queue'
+import Display from './views/Staff/Display'
 
 // Protected Route components
 const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
@@ -66,7 +66,7 @@ function App() {
           {/* Admin Routes */}
           <Route path="/admin/*" element={<ProtectedAdminRoute><AdminLayout /></ProtectedAdminRoute>} />
           
-          {/* Staff Routes - Add the asterisk for nested routes */}
+          {/* Staff Routes */}
           <Route path="/staff/*" element={<ProtectedStaffRoute><StaffLayout /></ProtectedStaffRoute>} />
           
           <Route path="/" element={<Navigate to="/login" replace />} />
