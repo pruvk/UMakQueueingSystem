@@ -49,6 +49,9 @@ builder.Services.AddCors(options =>
 builder.Services.AddDbContext<AuthDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 var app = builder.Build();
 
 // Configure middleware
@@ -470,6 +473,67 @@ app.MapDelete("/api/products/{id}", async (AuthDbContext db, int id) =>
     return Results.Ok();
 })
 .RequireAuthorization(policy => policy.RequireRole("staff"));
+
+// Get all cashiers
+app.MapGet("/api/cashier", async (ApplicationDbContext db) =>
+{
+    try
+    {
+        // First check if we can access the database
+        if (db == null)
+        {
+            return Results.Problem("Database context is null");
+        }
+
+        // Try to access the Cashiers table
+        if (db.Cashiers == null)
+        {
+            return Results.Problem("Cashiers DbSet is null");
+        }
+
+        var cashiers = await db.Cashiers.ToListAsync();
+        return Results.Ok(cashiers ?? new List<Cashier>());  // Return empty list if null
+    }
+    catch (Exception ex)
+    {
+        // Log the full exception details
+        Console.WriteLine($"Error fetching cashiers: {ex.Message}");
+        Console.WriteLine($"Stack trace: {ex.StackTrace}");
+        return Results.Problem(ex.Message);
+    }
+})
+.WithName("GetCashiers")
+.WithOpenApi();
+
+// Add new cashier
+app.MapPost("/api/cashier", async (Cashier cashier, ApplicationDbContext db) =>
+{
+    var count = await db.Cashiers.CountAsync();
+    if (count >= 9)
+    {
+        return Results.BadRequest("Maximum number of cashiers reached");
+    }
+
+    db.Cashiers.Add(cashier);
+    await db.SaveChangesAsync();
+    return Results.Ok(cashier);
+})
+.WithName("CreateCashier")
+.WithOpenApi();
+
+// Delete cashier
+app.MapDelete("/api/cashier/{id}", async (int id, ApplicationDbContext db) =>
+{
+    var cashier = await db.Cashiers.FindAsync(id);
+    if (cashier == null)
+        return Results.NotFound();
+
+    db.Cashiers.Remove(cashier);
+    await db.SaveChangesAsync();
+    return Results.Ok();
+})
+.WithName("DeleteCashier")
+.WithOpenApi();
 
 app.Run();
 

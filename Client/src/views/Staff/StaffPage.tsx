@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/sidebar"
 import Dashboard from './Dashboard'
 import Cashier from './Cashier'
-import Queue from './Queue'
+import Display from './Display'
 import Inventory from './Inventory'
 
 export default function StaffLayout() {
@@ -27,7 +27,7 @@ export default function StaffLayout() {
     switch(currentPath) {
       case 'dashboard': return 'Dashboard'
       case 'cashier': return 'Cashier'
-      case 'queue': return 'Queue Management'
+      case 'display': return 'Display'
       case 'inventory': return 'Inventory Management'
       default: return 'Dashboard'
     }
@@ -55,7 +55,7 @@ export default function StaffLayout() {
         <Routes>
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="cashier" element={<Cashier />} />
-          <Route path="queue" element={<Queue />} />
+          <Route path="display" element={<Display />} />
           <Route path="inventory" element={<Inventory />} />
           <Route path="/" element={<Dashboard />} />
         </Routes>

@@ -17,6 +17,7 @@ import Cart from './views/Device/Cart'
 import DeviceLayout from './views/Device/Catalog'
 import { CartProvider } from "@/contexts/CartContext"
 import { Toaster } from "@/components/ui/toaster"
+import Display from './views/Staff/Display'
 
 // Protected Route components
 const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
@@ -116,6 +117,19 @@ function App() {
         </Router>
         <Toaster />
       </CartProvider>
+      <Router>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          
+          {/* Admin Routes */}
+          <Route path="/admin/*" element={<ProtectedAdminRoute><AdminLayout /></ProtectedAdminRoute>} />
+          
+          {/* Staff Routes */}
+          <Route path="/staff/*" element={<ProtectedStaffRoute><StaffLayout /></ProtectedStaffRoute>} />
+          
+          <Route path="/" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </Router>
     </ThemeProvider>
   )
 }
