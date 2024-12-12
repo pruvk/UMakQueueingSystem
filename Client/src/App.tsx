@@ -10,7 +10,7 @@ import DeviceManagement from './views/Admin/Devices'
 import StaffLayout from './views/Staff/StaffPage'
 import Cashier from './views/Staff/Cashier'
 import Queue from './views/Staff/Queue'
-
+import DeviceLayout from './views/Device/Catalog'
 // Protected Route components
 const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
@@ -56,6 +56,28 @@ const ProtectedStaffRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const ProtectedDeviceRoute = ({ children }: { children: React.ReactNode }) => {
+  const navigate = useNavigate();
+  const token = localStorage.getItem('token');
+
+  useEffect(() => {
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    // Decode the JWT token
+    const decoded = JSON.parse(atob(token.split('.')[1]));
+    
+    // Check if it's a device token
+    if (decoded['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] !== 'device') {
+      navigate('/login');
+    }
+  }, [navigate]);
+
+  return <>{children}</>;
+};
+
 function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
@@ -69,6 +91,10 @@ function App() {
           {/* Staff Routes - Add the asterisk for nested routes */}
           <Route path="/staff/*" element={<ProtectedStaffRoute><StaffLayout /></ProtectedStaffRoute>} />
           
+          {/* Device Routes */}
+          <Route path="/device/*" element={<ProtectedDeviceRoute><DeviceLayout /></ProtectedDeviceRoute>} />
+          
+
           <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>
       </Router>
