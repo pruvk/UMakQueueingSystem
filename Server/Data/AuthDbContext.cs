@@ -12,6 +12,8 @@ public class AuthDbContext : DbContext
     public DbSet<User> Users { get; set; }
     public DbSet<Device> Devices { get; set; }
     public DbSet<Product> Products { get; set; }
+    public DbSet<Order> Orders { get; set; }
+    public DbSet<OrderItem> OrderItems { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -43,6 +45,30 @@ public class AuthDbContext : DbContext
                 v => v.ToLower() == "books" ? "books" : v.ToLower() == "uniforms" ? "uniforms" : "school_supplies"
             );
             entity.ToTable("products");
+        });
+
+        modelBuilder.Entity<Order>(entity =>
+        {
+            entity.HasKey(e => e.OrderId);
+            entity.Property(e => e.OrderId).HasColumnName("orderId");
+            entity.Property(e => e.Status).HasConversion(
+                v => v.ToLower(),
+                v => v.ToLower()
+            );
+            entity.ToTable("orders");
+        });
+
+        modelBuilder.Entity<OrderItem>(entity =>
+        {
+            entity.HasKey(e => e.OrderItemId);
+            entity.Property(e => e.OrderItemId).HasColumnName("orderItemId");
+            entity.HasOne(e => e.Order)
+                  .WithMany(o => o.Items)
+                  .HasForeignKey(e => e.OrderId);
+            entity.HasOne(e => e.Product)
+                  .WithMany()
+                  .HasForeignKey(e => e.ProductId);
+            entity.ToTable("order_items");
         });
     }
 } 
