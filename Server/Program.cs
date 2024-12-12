@@ -107,6 +107,68 @@ app.MapPost("/api/auth/login", async (LoginDto loginDto, AuthDbContext db) =>
     }
 });
 
+app.MapPost("/api/device/login", async (LoginDto loginDto, AuthDbContext db) =>
+{
+    try 
+    {
+        var device = await db.Devices.FirstOrDefaultAsync(d => d.Username == loginDto.Username);
+        
+        if (device == null)
+            return Results.BadRequest(new { message = "Device not found" });
+
+        // Simple password comparison for devices
+        if (device.Password != loginDto.Password)
+            return Results.BadRequest(new { message = "Invalid password" });
+
+        // Create a device-specific token
+        var token = CreateDeviceToken(device, builder.Configuration);
+
+        return Results.Ok(new { 
+            token,
+            deviceId = device.DeviceId,
+            deviceName = device.DeviceName,
+            deviceType = device.DeviceType,
+            message = "Device authenticated successfully"
+        });
+    }
+    catch (Exception ex)
+    {
+        // Log the error
+        Console.WriteLine($"Device login error: {ex.Message}");
+        return Results.StatusCode(500);
+    }
+});
+
+// Define device-specific token creation
+string CreateDeviceToken(Device device, IConfiguration configuration)
+{
+    var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
+        configuration.GetSection("AppSettings:Token").Value!.PadRight(64, '_')));
+
+    var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+    // Device-specific claims
+    var claims = new List<Claim>
+    {
+        new Claim(ClaimTypes.Name, device.Username),
+        new Claim(ClaimTypes.NameIdentifier, device.DeviceId.ToString()),
+        new Claim(ClaimTypes.Role, "device"),
+        new Claim("DeviceType", device.DeviceType),
+        new Claim("DeviceName", device.DeviceName),
+        new Claim("DeviceOwner", device.DeviceOwner),
+    };
+
+    var token = new JwtSecurityToken(
+        issuer: "UMakQueueingSystem",
+        audience: "Devices",
+        claims: claims,
+        expires: DateTime.Now.AddHours(12), // Shorter expiration for devices
+        signingCredentials: creds
+    );
+
+    return new JwtSecurityTokenHandler().WriteToken(token);
+}
+
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AuthDbContext>();
