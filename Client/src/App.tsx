@@ -10,6 +10,7 @@ import DeviceManagement from './views/Admin/Devices'
 import StaffLayout from './views/Staff/StaffPage'
 import Cashier from './views/Staff/Cashier'
 import Queue from './views/Staff/Queue'
+import Inventory from './views/Staff/Inventory'
 
 // Protected Route components
 const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
@@ -66,8 +67,14 @@ function App() {
           {/* Admin Routes */}
           <Route path="/admin/*" element={<ProtectedAdminRoute><AdminLayout /></ProtectedAdminRoute>} />
           
-          {/* Staff Routes - Add the asterisk for nested routes */}
-          <Route path="/staff/*" element={<ProtectedStaffRoute><StaffLayout /></ProtectedStaffRoute>} />
+          {/* Staff Routes */}
+          <Route path="/staff/*" element={<ProtectedStaffRoute><StaffLayout /></ProtectedStaffRoute>}>
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="cashier" element={<Cashier />} />
+            <Route path="queue" element={<Queue />} />
+            <Route path="inventory" element={<Inventory />} />
+            <Route path="" element={<Navigate to="/staff/dashboard" replace />} />
+          </Route>
           
           <Route path="/" element={<Navigate to="/login" replace />} />
         </Routes>

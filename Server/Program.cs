@@ -306,6 +306,93 @@ app.MapDelete("/api/devices/{id}", [Authorize(Roles = "admin")] async (int id, A
     return Results.Ok();
 });
 
+app.MapPost("/api/products", async (AuthDbContext db, ProductDto productDto, HttpContext context) =>
+{
+    var userId = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    if (userId == null) return Results.Unauthorized();
+
+    // If the imageUrl starts with "data:image", it's a base64 image
+    string? finalImageUrl = productDto.ImageUrl;
+    if (productDto.ImageUrl?.StartsWith("data:image") == true)
+    {
+        // Store the base64 string directly
+        finalImageUrl = productDto.ImageUrl;
+    }
+
+    var product = new Product
+    {
+        UserId = int.Parse(userId),
+        Name = productDto.Name,
+        Description = productDto.Description,
+        Price = productDto.Price,
+        Type = productDto.Type,
+        Author = productDto.Author,
+        Subject = productDto.Subject,
+        Size = productDto.Size,
+        SchoolSupplyType = productDto.SchoolSupplyType,
+        ImageUrl = finalImageUrl
+    };
+
+    db.Products.Add(product);
+    await db.SaveChangesAsync();
+    return Results.Ok(product);
+})
+.RequireAuthorization(policy => policy.RequireRole("staff"));
+
+app.MapGet("/api/products", async (AuthDbContext db, string? search, string? type) =>
+{
+    var query = db.Products.AsQueryable();
+
+    if (!string.IsNullOrEmpty(search))
+    {
+        query = query.Where(p => 
+            p.Name.ToLower().Contains(search.ToLower()) ||
+            p.Description.ToLower().Contains(search.ToLower()) ||
+            (p.Author != null && p.Author.ToLower().Contains(search.ToLower()))
+        );
+    }
+
+    if (!string.IsNullOrEmpty(type) && type != "all")
+    {
+        query = query.Where(p => p.Type == type);
+    }
+
+    var products = await query.OrderByDescending(p => p.CreatedAt).ToListAsync();
+    return Results.Ok(products);
+})
+.RequireAuthorization(policy => policy.RequireRole("staff"));
+
+app.MapPut("/api/products/{id}", async (AuthDbContext db, int id, ProductUpdateDto updateDto) =>
+{
+    var product = await db.Products.FindAsync(id);
+    if (product == null) return Results.NotFound();
+
+    product.Name = updateDto.Name;
+    product.Description = updateDto.Description;
+    product.Price = updateDto.Price;
+    product.Type = updateDto.Type;
+    product.Author = updateDto.Author;
+    product.Subject = updateDto.Subject;
+    product.Size = updateDto.Size;
+    product.SchoolSupplyType = updateDto.SchoolSupplyType;
+    product.ImageUrl = updateDto.ImageUrl;
+
+    await db.SaveChangesAsync();
+    return Results.Ok(product);
+})
+.RequireAuthorization(policy => policy.RequireRole("staff"));
+
+app.MapDelete("/api/products/{id}", async (AuthDbContext db, int id) =>
+{
+    var product = await db.Products.FindAsync(id);
+    if (product == null) return Results.NotFound();
+
+    db.Products.Remove(product);
+    await db.SaveChangesAsync();
+    return Results.Ok();
+})
+.RequireAuthorization(policy => policy.RequireRole("staff"));
+
 app.Run();
 
 // Helper method to create JWT token

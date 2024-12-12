@@ -11,6 +11,7 @@ public class AuthDbContext : DbContext
 
     public DbSet<User> Users { get; set; }
     public DbSet<Device> Devices { get; set; }
+    public DbSet<Product> Products { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -31,6 +32,17 @@ public class AuthDbContext : DbContext
                 v => v.ToLower() == "laptop" ? "laptop" : "pc"
             );
             entity.ToTable("devices");
+        });
+
+        modelBuilder.Entity<Product>(entity =>
+        {
+            entity.HasKey(e => e.ProductId);
+            entity.Property(e => e.ProductId).HasColumnName("productId");
+            entity.Property(e => e.Type).HasConversion(
+                v => v.ToLower(),
+                v => v.ToLower() == "books" ? "books" : v.ToLower() == "uniforms" ? "uniforms" : "school_supplies"
+            );
+            entity.ToTable("products");
         });
     }
 } 
