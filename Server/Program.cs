@@ -401,7 +401,7 @@ app.MapPost("/api/products", async (AuthDbContext db, ProductDto productDto, Htt
 })
 .RequireAuthorization(policy => policy.RequireRole("staff"));
 
-app.MapGet("/api/products", async (AuthDbContext db, string? search, string? type) =>
+app.MapGet("/api/products", async (AuthDbContext db, HttpContext context, string? search, string? type) =>
 {
     var query = db.Products.AsQueryable();
 
@@ -419,10 +419,26 @@ app.MapGet("/api/products", async (AuthDbContext db, string? search, string? typ
         query = query.Where(p => p.Type == type);
     }
 
-    var products = await query.OrderByDescending(p => p.CreatedAt).ToListAsync();
+    var products = await query
+        .Select(p => new {
+            id = p.ProductId,
+            name = p.Name,
+            description = p.Description,
+            price = p.Price,
+            type = p.Type,
+            author = p.Author,
+            subject = p.Subject,
+            size = p.Size,
+            schoolSupplyType = p.SchoolSupplyType,
+            imageUrl = p.ImageUrl,
+            createdAt = p.CreatedAt
+        })
+        .OrderByDescending(p => p.createdAt)
+        .ToListAsync();
+
     return Results.Ok(products);
 })
-.RequireAuthorization(policy => policy.RequireRole("staff"));
+.AllowAnonymous();
 
 app.MapPut("/api/products/{id}", async (AuthDbContext db, int id, ProductUpdateDto updateDto) =>
 {

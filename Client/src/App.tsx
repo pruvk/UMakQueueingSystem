@@ -11,8 +11,12 @@ import StaffLayout from './views/Staff/StaffPage'
 import Cashier from './views/Staff/Cashier'
 import Queue from './views/Staff/Queue'
 import Inventory from './views/Staff/Inventory'
+import Checkout from './views/Device/Checkout'
+import Cart from './views/Device/Cart'
 
 import DeviceLayout from './views/Device/Catalog'
+import { CartProvider } from "@/contexts/CartContext"
+
 // Protected Route components
 const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
@@ -83,29 +87,33 @@ const ProtectedDeviceRoute = ({ children }: { children: React.ReactNode }) => {
 function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <Router>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          
-          {/* Admin Routes */}
-          <Route path="/admin/*" element={<ProtectedAdminRoute><AdminLayout /></ProtectedAdminRoute>} />
-          
-          {/* Staff Routes */}
-          <Route path="/staff/*" element={<ProtectedStaffRoute><StaffLayout /></ProtectedStaffRoute>}>
-            <Route path="dashboard" element={<Dashboard />} />
-            <Route path="cashier" element={<Cashier />} />
-            <Route path="queue" element={<Queue />} />
-            <Route path="inventory" element={<Inventory />} />
-            <Route path="" element={<Navigate to="/staff/dashboard" replace />} />
-          </Route>
-          
-          {/* Device Routes */}
-          <Route path="/device/*" element={<ProtectedDeviceRoute><DeviceLayout /></ProtectedDeviceRoute>} />
-          
+      <CartProvider>
+        <Router>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            
+            {/* Admin Routes */}
+            <Route path="/admin/*" element={<ProtectedAdminRoute><AdminLayout /></ProtectedAdminRoute>} />
+            
+            {/* Staff Routes */}
+            <Route path="/staff/*" element={<ProtectedStaffRoute><StaffLayout /></ProtectedStaffRoute>}>
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="cashier" element={<Cashier />} />
+              <Route path="queue" element={<Queue />} />
+              <Route path="inventory" element={<Inventory />} />
+              <Route path="" element={<Navigate to="/staff/dashboard" replace />} />
+            </Route>
+            
+            {/* Device Routes */}
+            <Route path="/device/*" element={<ProtectedDeviceRoute><DeviceLayout /></ProtectedDeviceRoute>} />
+            <Route path="/device/checkout" element={<ProtectedDeviceRoute><Checkout /></ProtectedDeviceRoute>} />
+            <Route path="/device/cart" element={<ProtectedDeviceRoute><Cart /></ProtectedDeviceRoute>} />
+            
 
-          <Route path="/" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </Router>
+            <Route path="/" element={<Navigate to="/login" replace />} />
+          </Routes>
+        </Router>
+      </CartProvider>
     </ThemeProvider>
   )
 }
