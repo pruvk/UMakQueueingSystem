@@ -251,7 +251,7 @@ export default function Cashier() {
                     className="flex-1"
                     onClick={() => handleDone(cashier.id)}
                   >
-                    Done
+                    Complete
                   </Button>
                   <Button 
                     variant="outline" 
