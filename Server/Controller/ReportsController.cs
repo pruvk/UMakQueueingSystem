@@ -399,62 +399,81 @@ namespace Server.Controller
                 gfx.DrawString("Transaction Report", subtitleFont, textColor, 40, 70);
                 gfx.DrawString($"Generated on: {DateTime.Now:MMMM dd, yyyy}", regularFont, textColor, 40, 90);
 
-                // Draw table header
+                // Table settings
                 var startY = 120;
                 var rowHeight = 25;
                 var margin = 40;
-                var col1Width = 80;    // Queue #
-                var col2Width = 100;   // Amount
-                var col3Width = 100;   // Payment Method
-                var col4Width = 120;   // Completed By
-                var col5Width = 140;   // Completed At
-                var tableWidth = col1Width + col2Width + col3Width + col4Width + col5Width;
 
+                // Adjusted column widths to fit A4 page (total width ~510)
+                var col1Width = 70;     // Queue # (smaller)
+                var col2Width = 80;     // Amount (smaller)
+                var col3Width = 70;     // Payment (smaller)
+                var col4Width = 70;     // Status (new column)
+                var col5Width = 100;    // Completed By
+                var col6Width = 120;    // Completed At (date needs more space)
+                var tableWidth = col1Width + col2Width + col3Width + col4Width + col5Width + col6Width;
+
+                // Column positions
                 var col1X = margin;
                 var col2X = col1X + col1Width;
                 var col3X = col2X + col2Width;
                 var col4X = col3X + col3Width;
                 var col5X = col4X + col4Width;
+                var col6X = col5X + col5Width;
 
-                // Draw header background
-                var headerRect = new XRect(margin, startY, tableWidth, rowHeight);
-                gfx.DrawRectangle(new XSolidBrush(headerBgColor), headerRect);
-                gfx.DrawRectangle(new XPen(borderColor), headerRect);
+                // Draw table header
+                var tableHeaderRect = new XRect(margin, startY, tableWidth, rowHeight);
+                gfx.DrawRectangle(new XSolidBrush(headerBgColor), tableHeaderRect);
+                gfx.DrawRectangle(new XPen(borderColor), tableHeaderRect);
 
                 // Draw header text
                 gfx.DrawString("Queue #", boldFont, textColor, col1X + 5, startY + 16);
                 gfx.DrawString("Amount", boldFont, textColor, col2X + 5, startY + 16);
                 gfx.DrawString("Payment", boldFont, textColor, col3X + 5, startY + 16);
-                gfx.DrawString("Completed By", boldFont, textColor, col4X + 5, startY + 16);
-                gfx.DrawString("Completed At", boldFont, textColor, col5X + 5, startY + 16);
+                gfx.DrawString("Status", boldFont, textColor, col4X + 5, startY + 16);
+                gfx.DrawString("Completed By", boldFont, textColor, col5X + 5, startY + 16);
+                gfx.DrawString("Completed At", boldFont, textColor, col6X + 5, startY + 16);
 
                 // Draw data rows
                 var currentY = startY + rowHeight;
                 decimal totalAmount = 0;
+                int completedCount = 0;
+                int cancelledCount = 0;
 
                 foreach (var transaction in transactions)
                 {
-                    // Draw row background and border
+                    // Draw row border
                     var rowRect = new XRect(margin, currentY, tableWidth, rowHeight);
                     gfx.DrawRectangle(new XPen(borderColor), rowRect);
 
-                    // Draw vertical lines for columns
+                    // Draw vertical lines
                     gfx.DrawLine(new XPen(borderColor), col2X, currentY, col2X, currentY + rowHeight);
                     gfx.DrawLine(new XPen(borderColor), col3X, currentY, col3X, currentY + rowHeight);
                     gfx.DrawLine(new XPen(borderColor), col4X, currentY, col4X, currentY + rowHeight);
                     gfx.DrawLine(new XPen(borderColor), col5X, currentY, col5X, currentY + rowHeight);
+                    gfx.DrawLine(new XPen(borderColor), col6X, currentY, col6X, currentY + rowHeight);
+
+                    // Update counters
+                    if (transaction.Status == "completed")
+                    {
+                        completedCount++;
+                        if (transaction.Order?.Total != null)
+                        {
+                            totalAmount += transaction.Order.Total;
+                        }
+                    }
+                    else if (transaction.Status == "cancelled")
+                    {
+                        cancelledCount++;
+                    }
 
                     // Draw cell data
                     gfx.DrawString(transaction.QueueNumber ?? "N/A", regularFont, textColor, col1X + 5, currentY + 16);
                     gfx.DrawString(transaction.Order?.Total != null ? $"₱{transaction.Order.Total:N2}" : "N/A", regularFont, textColor, col2X + 5, currentY + 16);
                     gfx.DrawString(transaction.Order?.PaymentMethod ?? "N/A", regularFont, textColor, col3X + 5, currentY + 16);
-                    gfx.DrawString(transaction.CompletedBy ?? "N/A", regularFont, textColor, col4X + 5, currentY + 16);
-                    gfx.DrawString(transaction.CompletedAt.ToLocalTime().ToString("MM/dd/yyyy HH:mm"), regularFont, textColor, col5X + 5, currentY + 16);
-
-                    if (transaction.Order?.Total != null)
-                    {
-                        totalAmount += transaction.Order.Total;
-                    }
+                    gfx.DrawString(transaction.Status ?? "N/A", regularFont, textColor, col4X + 5, currentY + 16);
+                    gfx.DrawString(transaction.CompletedBy ?? "N/A", regularFont, textColor, col5X + 5, currentY + 16);
+                    gfx.DrawString(transaction.CompletedAt.ToLocalTime().ToString("MM/dd/yyyy HH:mm"), regularFont, textColor, col6X + 5, currentY + 16);
 
                     currentY += rowHeight;
 
@@ -471,7 +490,12 @@ namespace Server.Controller
                 // Draw summary
                 currentY += 20;
                 gfx.DrawString($"Total Transactions: {transactions.Count}", boldFont, textColor, margin, currentY);
-                gfx.DrawString($"Total Amount: ₱{totalAmount:N2}", boldFont, textColor, margin, currentY + 20);
+                currentY += 20;
+                gfx.DrawString($"Completed Transactions: {completedCount}", boldFont, textColor, margin, currentY);
+                currentY += 20;
+                gfx.DrawString($"Cancelled Transactions: {cancelledCount}", boldFont, textColor, margin, currentY);
+                currentY += 20;
+                gfx.DrawString($"Total Amount (Completed): ₱{totalAmount:N2}", boldFont, textColor, margin, currentY);
 
                 // Save to memory stream
                 using var stream = new MemoryStream();

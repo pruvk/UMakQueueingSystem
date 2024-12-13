@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { ModeToggle } from "@/components/mode-toggle"
 import { useCart } from "@/contexts/CartContext"
 import { useEffect, useState } from "react"
-import { ShoppingCart, Search, Plus } from "lucide-react"
+import { ShoppingCart, Search, Plus, Check } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { Input } from "@/components/ui/input"
 import { motion } from "framer-motion"
@@ -17,6 +17,7 @@ type Product = {
   description: string
   type: string
   imageUrl?: string
+  size?: string
 }
 
 export default function DeviceCatalog() {
@@ -142,7 +143,7 @@ export default function DeviceCatalog() {
       product.description.toLowerCase().includes(searchQuery.toLowerCase())
     )
 
-  const handleAddToCart = (product: Product) => {
+  const handleAddToCart = async (product: Product) => {
     addItem({
       id: product.id,
       name: product.name,
@@ -152,6 +153,12 @@ export default function DeviceCatalog() {
       quantity: 1
     });
   };
+
+  // Update the state to track success state as well
+  const [buttonState, setButtonState] = useState<{ loading: number | null; success: number | null }>({
+    loading: null,
+    success: null
+  });
 
   return (
     <div className="min-h-screen bg-background">
@@ -231,6 +238,11 @@ export default function DeviceCatalog() {
                   <p className="line-clamp-3 text-sm text-muted-foreground">
                     {item.description}
                   </p>
+                  {item.type.toLowerCase() === "uniforms" && item.size && (
+                    <p className="mt-2 text-sm font-medium">
+                      Size: {item.size}
+                    </p>
+                  )}
                   <p className="mt-4 text-xl font-bold text-primary">
                     ₱{item.price.toFixed(2)}
                   </p>
@@ -239,10 +251,31 @@ export default function DeviceCatalog() {
                 <CardFooter className="flex-none pb-4">
                   <Button 
                     size="sm" 
-                    onClick={() => handleAddToCart(item)}
-                    className="w-full"
+                    onClick={async () => {
+                      setButtonState({ loading: item.id, success: null });
+                      await handleAddToCart(item);
+                      setButtonState({ loading: null, success: item.id });
+                      // Reset success state after 1 second
+                      setTimeout(() => {
+                        setButtonState({ loading: null, success: null });
+                      }, 1000);
+                    }}
+                    disabled={buttonState.loading === item.id}
+                    className={`w-full ${buttonState.success === item.id ? 'bg-green-600 hover:bg-green-700' : ''}`}
                   >
-                    <Plus className="mr-2 h-4 w-4" /> Add to Cart
+                    {buttonState.loading === item.id ? (
+                      <span className="flex items-center">
+                        Adding...
+                      </span>
+                    ) : buttonState.success === item.id ? (
+                      <span className="flex items-center">
+                        <Check className="mr-2 h-4 w-4" /> Added
+                      </span>
+                    ) : (
+                      <>
+                        <Plus className="mr-2 h-4 w-4" /> Add to Cart
+                      </>
+                    )}
                   </Button>
                 </CardFooter>
               </Card>

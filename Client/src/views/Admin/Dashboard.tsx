@@ -20,7 +20,6 @@ interface DashboardStats {
   activeCashiers: number
   totalCashiers: number
   todayTransactions: number
-  averageServiceTime: number
   queueStatus: QueueStatus
   salesDistribution: SalesDistribution
 }
@@ -82,7 +81,6 @@ export default function Dashboard() {
     activeCashiers: 0,
     totalCashiers: 9,
     todayTransactions: 0,
-    averageServiceTime: 0,
     queueStatus: {
       waiting: 0,
       serving: 0,
@@ -226,22 +224,14 @@ export default function Dashboard() {
       progressColor: "bg-secondary"
     },
     {
-      title: "Today's Transactions",
+      title: "Completed Transactions",
       value: stats.todayTransactions,
       icon: ArrowUpRight,
-      subtitle: "95% completion rate",
+      subtitle: `${Math.round((stats.queueStatus.completed / (stats.queueStatus.completed + stats.queueStatus.cancelled)) * 100)}% completion rate`,
       color: CHART_COLORS.accent,
       bgColor: "bg-accent/10",
       trend: "up",
       trendColor: "text-accent"
-    },
-    {
-      title: "Avg. Service Time",
-      value: formatTime(stats.averageServiceTime),
-      icon: Clock,
-      subtitle: "per transaction",
-      color: CHART_COLORS.chart1,
-      bgColor: "bg-primary/10"
     }
   ]
 
@@ -259,7 +249,7 @@ export default function Dashboard() {
       </motion.div>
 
       {/* Stats Cards */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {statsConfig.map((stat, index) => (
           <motion.div
             key={stat.title}

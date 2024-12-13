@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Monitor } from "lucide-react"
 import { useDisplay } from "@/contexts/DisplayContext"
@@ -22,7 +21,6 @@ export default function Display() {
   const [queues, setQueues] = useState<Queue[]>([])
   const [cashiers, setCashiers] = useState<Cashier[]>([])
   const [audio] = useState(new Audio("/notification.mp3"))
-  const [isRefreshing, setIsRefreshing] = useState(false)
   const { currentQueue, setCurrentQueue } = useDisplay()
 
   const fetchCashiers = async () => {
@@ -66,12 +64,6 @@ export default function Display() {
     }
   };
 
-  const handleRefresh = async () => {
-    setIsRefreshing(true);
-    await Promise.all([fetchQueues(), fetchCashiers()]);
-    setTimeout(() => setIsRefreshing(false), 1000);
-  };
-
   useEffect(() => {
     fetchQueues()
     fetchCashiers()
@@ -95,7 +87,6 @@ export default function Display() {
   const waiting = queues
     .filter(q => q.status === "waiting" && q.queueNumber !== "0000")
     .sort((a, b) => a.queueNumber.localeCompare(b.queueNumber))
-    .slice(0, 5)
 
   const handlePopOut = () => {
     // Open a new window with the display content
@@ -148,21 +139,24 @@ export default function Display() {
           </div>
         </div>
 
-        {/* Up Next */}
+        {/* Waiting */}
         <div className="bg-card rounded-lg p-6 border shadow-lg">
-          <h2 className="text-2xl font-bold mb-4 text-secondary">UP NEXT</h2>
-          <div className="space-y-2">
+          <h2 className="text-2xl font-bold mb-4 text-secondary">WAITING</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 max-h-[600px] overflow-y-auto">
             {waiting.length > 0 ? (
               waiting.map((queue) => (
-                <div
+                <motion.div
                   key={queue.queueNumber}
-                  className="text-3xl font-semibold text-center p-2 bg-secondary text-secondary-foreground rounded-lg shadow-sm"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  className="text-2xl font-semibold text-center p-2 bg-secondary text-secondary-foreground rounded-lg shadow-sm"
                 >
                   {queue.queueNumber}
-                </div>
+                </motion.div>
               ))
             ) : (
-              <div className="text-2xl text-center p-4 text-muted-foreground">
+              <div className="col-span-full text-2xl text-center p-4 text-muted-foreground">
                 No queues waiting
               </div>
             )}

@@ -385,7 +385,7 @@ export default function Cashier() {
         )}
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {cashiers
           .sort((a, b) => {
             // Extract numbers from cashier names
@@ -403,16 +403,16 @@ export default function Cashier() {
             <div
               key={cashier.id}
               className={cn(
-                "p-6 rounded-xl border shadow-sm",
+                "p-4 sm:p-6 rounded-xl border shadow-sm",
                 cashier.status === 'inactive' ? 'opacity-50' : '',
                 "bg-card"
               )}
             >
               <div className="flex flex-col space-y-4">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold">{cashier.name}</h3>
-                    <p className="text-sm text-muted-foreground">
+                  <div className="space-y-1">
+                    <h3 className="text-base sm:text-lg font-semibold">{cashier.name}</h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground">
                       Status: {cashier.status === 'active' ? 'Active' : 'Inactive'}
                     </p>
                   </div>
@@ -444,14 +444,14 @@ export default function Cashier() {
                 
                 <div className="space-y-2">
                   <div className="text-center">
-                    <p className="text-sm text-muted-foreground">Now Serving</p>
-                    <p className="text-2xl font-bold">{cashier.currentNumber}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Now Serving</p>
+                    <p className="text-xl sm:text-2xl font-bold">{cashier.currentNumber}</p>
                   </div>
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <Button 
-                    className="flex-1" 
+                    className="flex-1 text-sm" 
                     onClick={() => handleNext(cashier.id)}
                     disabled={cashier.status === 'inactive' || isServingCustomer(cashier.currentNumber)}
                     variant={isServingCustomer(cashier.currentNumber) ? "ghost" : "default"}
@@ -460,7 +460,7 @@ export default function Cashier() {
                   </Button>
                   <Button 
                     variant={isServingCustomer(cashier.currentNumber) ? "default" : "ghost"} 
-                    className="flex-1"
+                    className="flex-1 text-sm"
                     onClick={() => handleDone(cashier.id)}
                     disabled={cashier.status === 'inactive' || !isServingCustomer(cashier.currentNumber)}
                   >
@@ -468,7 +468,7 @@ export default function Cashier() {
                   </Button>
                   <Button 
                     variant={isServingCustomer(cashier.currentNumber) ? "default" : "ghost"}
-                    className="flex-1"
+                    className="flex-1 text-sm"
                     onClick={() => handleCancel(cashier.id)}
                     disabled={cashier.status === 'inactive' || !isServingCustomer(cashier.currentNumber)}
                   >
