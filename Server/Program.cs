@@ -8,11 +8,20 @@ using Server.Data;
 using Server.Models;
 using Server.DTOs;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
+
+// Add logging
+builder.Services.AddLogging(logging =>
+{
+    logging.ClearProviders();
+    logging.AddConsole();
+    logging.AddDebug();
+});
 
 // Configure DbContext
 builder.Services.AddDbContext<AuthDbContext>(options =>
@@ -20,7 +29,35 @@ builder.Services.AddDbContext<AuthDbContext>(options =>
 
 // Add services
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "UMak Queue API", Version = "v1" });
+    
+    // Add JWT Authentication
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme.",
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+
+    c.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
 // Add Authorization and Authentication services
 builder.Services.AddAuthorization();
@@ -41,16 +78,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp",
-        builder => builder
-            .WithOrigins(
-                "http://localhost:5173",
-                "http://localhost:5174",
-                "http://localhost:5175"
-            )
-            .AllowAnyMethod()
-            .AllowAnyHeader()
-            .AllowCredentials());
+        builder =>
+        {
+            builder
+                .SetIsOriginAllowed(_ => true)
+                .AllowAnyMethod()
+                .AllowAnyHeader()
+                .AllowCredentials();
+        });
 });
+
+// Other service configurations...
 
 var app = builder.Build();
 
@@ -62,7 +100,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors("AllowReactApp");
+app.UseCors("AllowReactApp");  // Before auth middleware
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -474,67 +512,7 @@ app.MapDelete("/api/products/{id}", async (AuthDbContext db, int id) =>
 })
 .RequireAuthorization(policy => policy.RequireRole("staff"));
 
-// Get all cashiers
-app.MapGet("/api/cashier", async (AuthDbContext db) =>
-{
-    try
-    {
-        // First check if we can access the database
-        if (db == null)
-        {
-            return Results.Problem("Database context is null");
-        }
-
-        // Try to access the Cashiers table
-        if (db.Cashiers == null)
-        {
-            return Results.Problem("Cashiers DbSet is null");
-        }
-
-        var cashiers = await db.Cashiers.ToListAsync();
-        return Results.Ok(cashiers ?? new List<Cashier>());  // Return empty list if null
-    }
-    catch (Exception ex)
-    {
-        // Log the full exception details
-        Console.WriteLine($"Error fetching cashiers: {ex.Message}");
-        Console.WriteLine($"Stack trace: {ex.StackTrace}");
-        return Results.Problem(ex.Message);
-    }
-})
-.WithName("GetCashiers")
-.WithOpenApi();
-
-// Add new cashier
-app.MapPost("/api/cashier", async (Cashier cashier, AuthDbContext db) =>
-{
-    var count = await db.Cashiers.CountAsync();
-    if (count >= 9)
-    {
-        return Results.BadRequest("Maximum number of cashiers reached");
-    }
-
-    db.Cashiers.Add(cashier);
-    await db.SaveChangesAsync();
-    return Results.Ok(cashier);
-})
-.WithName("CreateCashier")
-.WithOpenApi();
-
-// Delete cashier
-app.MapDelete("/api/cashier/{id}", async (int id, AuthDbContext db) =>
-{
-    var cashier = await db.Cashiers.FindAsync(id);
-    if (cashier == null)
-        return Results.NotFound();
-
-    db.Cashiers.Remove(cashier);
-    await db.SaveChangesAsync();
-    return Results.Ok();
-})
-.WithName("DeleteCashier")
-.WithOpenApi();
-
+app.MapControllers();
 app.Run();
 
 // Helper method to create JWT token
@@ -558,3 +536,57 @@ string CreateToken(User user, IConfiguration configuration)
 
     return new JwtSecurityTokenHandler().WriteToken(token);
 }
+
+// Add this with your other queue-related endpoints
+app.MapPost("/api/queue/{queueNumber}/cancel", [Authorize(Roles = "staff")] async (string queueNumber, AuthDbContext db) =>
+{
+    try
+    {
+        var queue = await db.Queues
+            .Include(q => q.Order)
+            .FirstOrDefaultAsync(q => q.QueueNumber == queueNumber && q.Status == "serving");
+
+        if (queue == null)
+        {
+            return Results.NotFound(new ApiResponse<string>
+            {
+                Success = false,
+                Message = $"Queue {queueNumber} not found or not currently being served",
+                Data = default
+            });
+        }
+
+        // Update queue status
+        queue.Status = "cancelled";
+        queue.CompletedAt = DateTime.UtcNow;
+
+        // Reset cashier's current number if assigned
+        if (queue.CashierId.HasValue)
+        {
+            var cashier = await db.Cashiers.FindAsync(queue.CashierId.Value);
+            if (cashier != null)
+            {
+                cashier.CurrentNumber = "0000";
+            }
+        }
+
+        await db.SaveChangesAsync();
+
+        return Results.Ok(new ApiResponse<string>
+        {
+            Success = true,
+            Message = "Queue cancelled successfully",
+            Data = default
+        });
+    }
+    catch (Exception ex)
+    {
+        return Results.Json(new ApiResponse<string>
+        {
+            Success = false,
+            Message = "Failed to cancel queue",
+            Error = ex.Message,
+            Data = default
+        }, statusCode: 500);
+    }
+});

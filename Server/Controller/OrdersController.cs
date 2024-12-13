@@ -3,11 +3,13 @@ using Microsoft.EntityFrameworkCore;
 using Server.Data;
 using Server.DTOs;
 using Server.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Server.Controller;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class OrdersController : ControllerBase
 {
     private readonly AuthDbContext _context;
@@ -38,6 +40,13 @@ public class OrdersController : ControllerBase
             )).ToList(),
             o.Total,
             o.Status,
+            new CustomerInfoDto(
+                o.CustomerInfo.Name,
+                o.CustomerInfo.StudentId,
+                o.CustomerInfo.ContactNumber,
+                o.CustomerInfo.Professor
+            ),
+            o.PaymentMethod,
             o.CreatedAt
         ));
 
@@ -48,23 +57,35 @@ public class OrdersController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<OrderResponseDto>> CreateOrder(OrderDto orderDto)
     {
-        // Verify device exists
+        Console.WriteLine($"Received request with payload: {System.Text.Json.JsonSerializer.Serialize(orderDto)}");
+        
         var device = await _context.Devices.FindAsync(orderDto.DeviceId);
         if (device == null)
+        {
+            Console.WriteLine($"Device with ID {orderDto.DeviceId} not found");
             return NotFound("Device not found");
+        }
 
-        // Create order
         var order = new Order
         {
             DeviceId = orderDto.DeviceId,
             Total = orderDto.Total,
-            Status = "pending",
+            Status = orderDto.Status,
+            PaymentMethod = orderDto.PaymentMethod,
+            CustomerInfo = new CustomerInfo
+            {
+                Name = orderDto.CustomerInfo.Name,
+                StudentId = orderDto.CustomerInfo.StudentId,
+                ContactNumber = orderDto.CustomerInfo.ContactNumber,
+                Professor = orderDto.CustomerInfo.Professor
+            },
             Items = orderDto.Items.Select(item => new OrderItem
             {
                 ProductId = item.ProductId,
                 Quantity = item.Quantity,
                 Price = item.Price
-            }).ToList()
+            }).ToList(),
+            CreatedAt = DateTime.UtcNow
         };
 
         _context.Orders.Add(order);
@@ -74,6 +95,17 @@ public class OrdersController : ControllerBase
         await _context.Entry(order)
             .Collection(o => o.Items)
             .LoadAsync();
+
+        // Create queue entry
+        var queue = new Queue
+        {
+            QueueNumber = $"A{order.OrderId.ToString().PadLeft(3, '0')}",
+            OrderId = order.OrderId,
+            Status = "waiting"
+        };
+
+        _context.Queues.Add(queue);
+        await _context.SaveChangesAsync();
 
         var responseDto = new OrderResponseDto(
             order.OrderId,
@@ -85,6 +117,13 @@ public class OrdersController : ControllerBase
             )).ToList(),
             order.Total,
             order.Status,
+            new CustomerInfoDto(
+                order.CustomerInfo.Name,
+                order.CustomerInfo.StudentId,
+                order.CustomerInfo.ContactNumber,
+                order.CustomerInfo.Professor
+            ),
+            order.PaymentMethod,
             order.CreatedAt
         );
 
@@ -135,6 +174,13 @@ public class OrdersController : ControllerBase
             )).ToList(),
             order.Total,
             order.Status,
+            new CustomerInfoDto(
+                order.CustomerInfo.Name,
+                order.CustomerInfo.StudentId,
+                order.CustomerInfo.ContactNumber,
+                order.CustomerInfo.Professor
+            ),
+            order.PaymentMethod,
             order.CreatedAt
         );
 
