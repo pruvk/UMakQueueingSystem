@@ -286,28 +286,36 @@ app.MapPost("/api/users", [Authorize(Roles = "admin")] async (RegisterDto regist
 
 app.MapPut("/api/users/{id}", [Authorize(Roles = "admin")] async (int id, UserUpdateDto updateDto, AuthDbContext db) =>
 {
-    var user = await db.Users.FirstOrDefaultAsync(u => u.UserId == id);
-    if (user == null)
+    try 
     {
-        return Results.NotFound("User not found");
+        var user = await db.Users.FirstOrDefaultAsync(u => u.UserId == id);
+        if (user == null)
+        {
+            return Results.NotFound(new { message = "User not found" });
+        }
+
+        // Only update the fields that are meant to be updated
+        user.FirstName = updateDto.FirstName;
+        user.MiddleName = updateDto.MiddleName;
+        user.LastName = updateDto.LastName;
+
+        await db.SaveChangesAsync();
+
+        return Results.Ok(new
+        {
+            user.UserId,
+            user.Username,
+            user.FirstName,
+            user.MiddleName,
+            user.LastName,
+            user.Role,
+            user.CreatedAt
+        });
     }
-
-    user.FirstName = updateDto.FirstName;
-    user.MiddleName = updateDto.MiddleName;
-    user.LastName = updateDto.LastName;
-
-    await db.SaveChangesAsync();
-
-    return Results.Ok(new
+    catch (Exception ex)
     {
-        user.UserId,
-        user.Username,
-        user.FirstName,
-        user.MiddleName,
-        user.LastName,
-        user.Role,
-        user.CreatedAt
-    });
+        return Results.BadRequest(new { message = ex.Message });
+    }
 });
 
 app.MapDelete("/api/users/{id}", [Authorize(Roles = "admin")] async (int id, AuthDbContext db) =>
