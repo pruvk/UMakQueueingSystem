@@ -31,15 +31,14 @@
     --chart-5: 30 40% 50%;
     --radius: 0.5rem;
     
-    /* Updated light mode sidebar colors */
-    --sidebar-background: var(--background);
-    --sidebar-foreground: var(--foreground);
-    --sidebar-primary: var(--primary);
-    --sidebar-primary-foreground: var(--primary-foreground);
-    --sidebar-accent: var(--accent);
-    --sidebar-accent-foreground: var(--accent-foreground);
-    --sidebar-border: var(--border);
-    --sidebar-ring: var(--ring);
+    --sidebar-background: var(--card); /* Matches card background */
+    --sidebar-foreground: var(--card-foreground); /* Matches card text */
+    --sidebar-primary: var(--primary); /* Matches primary color */
+    --sidebar-primary-foreground: var(--primary-foreground); /* Matches primary text */
+    --sidebar-accent: var(--accent); /* Matches accent color */
+    --sidebar-accent-foreground: var(--accent-foreground); /* Matches accent text */
+    --sidebar-border: var(--border); /* Matches border color */
+    --sidebar-ring: var(--ring); /* Matches ring color */
   }
 
   .dark {
@@ -68,15 +67,14 @@
     --chart-4: 0 0% 60%;
     --chart-5: 30 50% 40%;
 
-    /* Updated dark mode sidebar colors */
-    --sidebar-background: var(--background);
-    --sidebar-foreground: var(--foreground);
-    --sidebar-primary: var(--primary);
-    --sidebar-primary-foreground: var(--primary-foreground);
-    --sidebar-accent: var(--accent);
-    --sidebar-accent-foreground: var(--accent-foreground);
-    --sidebar-border: var(--border);
-    --sidebar-ring: var(--ring);
+    --sidebar-background: var(--card); /* Matches dark card background */
+    --sidebar-foreground: var(--card-foreground); /* Matches dark card text */
+    --sidebar-primary: var(--primary); /* Matches dark primary color */
+    --sidebar-primary-foreground: var(--primary-foreground); /* Matches dark primary text */
+    --sidebar-accent: var(--accent); /* Matches dark accent color */
+    --sidebar-accent-foreground: var(--accent-foreground); /* Matches dark accent text */
+    --sidebar-border: var(--border); /* Matches dark border color */
+    --sidebar-ring: var(--ring); /* Matches dark ring color */
   }
 }
 
