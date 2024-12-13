@@ -195,16 +195,63 @@ namespace Server.Controller
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCashier(int id)
         {
-            var cashier = await _context.Cashiers.FindAsync(id);
-            if (cashier == null)
+            try
             {
-                return NotFound();
+                var cashier = await _context.Cashiers
+                    .Include(c => c.Queues)  // Include related queues
+                    .FirstOrDefaultAsync(c => c.Id == id);
+
+                if (cashier == null)
+                {
+                    return NotFound(new ApiResponse<string>
+                    {
+                        Success = false,
+                        Message = "Cashier not found",
+                        Data = default
+                    });
+                }
+
+                // Check if cashier has any active queues
+                if (cashier.Queues != null && cashier.Queues.Any(q => q.Status == "serving"))
+                {
+                    return BadRequest(new ApiResponse<string>
+                    {
+                        Success = false,
+                        Message = "Cannot delete cashier with active queues",
+                        Data = default
+                    });
+                }
+
+                // Update any references in Queue table
+                var relatedQueues = await _context.Queues
+                    .Where(q => q.CashierId == id)
+                    .ToListAsync();
+
+                foreach (var queue in relatedQueues)
+                {
+                    queue.CashierId = null;
+                }
+
+                // Now delete the cashier
+                _context.Cashiers.Remove(cashier);
+                await _context.SaveChangesAsync();
+
+                return Ok(new ApiResponse<string>
+                {
+                    Success = true,
+                    Message = "Cashier deleted successfully",
+                    Data = default
+                });
             }
-
-            _context.Cashiers.Remove(cashier);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ApiResponse<string>
+                {
+                    Success = false,
+                    Message = "Failed to delete cashier",
+                    Error = ex.Message
+                });
+            }
         }
 
         [HttpGet("queue/next/{cashierId}")]

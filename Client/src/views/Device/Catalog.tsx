@@ -142,6 +142,16 @@ export default function DeviceCatalog() {
       product.description.toLowerCase().includes(searchQuery.toLowerCase())
     )
 
+  const handleAddToCart = (product: Product) => {
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.imageUrl,
+      type: product.type,
+      quantity: 1
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -229,14 +239,7 @@ export default function DeviceCatalog() {
                 <CardFooter className="flex-none pb-4">
                   <Button 
                     size="sm" 
-                    onClick={() => addItem({
-                      id: item.id,
-                      name: item.name,
-                      price: item.price,
-                      quantity: 1,
-                      image: item.imageUrl,
-                      description: item.description
-                    })}
+                    onClick={() => handleAddToCart(item)}
                     className="w-full"
                   >
                     <Plus className="mr-2 h-4 w-4" /> Add to Cart

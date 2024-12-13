@@ -30,6 +30,6 @@ public class CustomerInfo
     public string Name { get; set; } = null!;
     public string StudentId { get; set; } = null!;
     public string ContactNumber { get; set; } = null!;
-    public string Professor { get; set; } = null!;
+    public string? Professor { get; set; }
     public Order Order { get; set; } = null!;
 }

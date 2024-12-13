@@ -1,6 +1,6 @@
 import * as React from "react"
 import { useLocation, Link, useNavigate } from "react-router-dom"
-import { LayoutDashboard, LogOut, MonitorPlay, Package } from "lucide-react"
+import { LogOut, MonitorPlay, Package } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -23,11 +23,6 @@ const data = {
       title: "Staff Controls",
       url: "#",
       items: [
-        {
-          title: "Dashboard",
-          url: "/staff/dashboard",
-          icon: <LayoutDashboard className="h-4 w-4" />,
-        },
         {
           title: "Cashier",
           url: "/staff/cashier",

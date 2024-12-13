@@ -72,12 +72,12 @@ public class OrdersController : ControllerBase
             Total = orderDto.Total,
             Status = orderDto.Status,
             PaymentMethod = orderDto.PaymentMethod,
-            CustomerInfo = new CustomerInfo
+            CustomerInfo = new Models.CustomerInfo
             {
                 Name = orderDto.CustomerInfo.Name,
                 StudentId = orderDto.CustomerInfo.StudentId,
                 ContactNumber = orderDto.CustomerInfo.ContactNumber,
-                Professor = orderDto.CustomerInfo.Professor
+                Professor = orderDto.CustomerInfo.Professor ?? string.Empty
             },
             Items = orderDto.Items.Select(item => new OrderItem
             {

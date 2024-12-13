@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useCart } from "@/contexts/CartContext"
 import { Button } from "@/components/ui/button"
@@ -21,9 +21,26 @@ export default function Checkout() {
   const [professor, setProfessor] = useState("")
   const [paymentMethod, setPaymentMethod] = useState("cash")
 
+  const hasBooks = () => {
+    return items.some(item => {
+      console.log('Checking item type:', item.type);
+      return item.type === 'books';
+    });
+  }
+
+  useEffect(() => {
+    console.log('Cart items:', items);
+    console.log('Has books:', hasBooks());
+  }, [items]);
+
   const handleSubmitOrder = async () => {
-    if (!customerName || !studentId || !contactNumber || !professor) {
-      setError("Please fill in all fields")
+    if (!customerName || !studentId || !contactNumber) {
+      setError("Please fill in all required fields")
+      return
+    }
+
+    if (hasBooks() && !professor) {
+      setError("Please provide professor name for book orders")
       return
     }
 
@@ -57,7 +74,7 @@ export default function Checkout() {
           name: customerName,
           studentId,
           contactNumber,
-          professor
+          ...(hasBooks() && { professor })
         },
         paymentMethod
       }
@@ -177,16 +194,19 @@ export default function Checkout() {
                       />
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="professor">Professor</Label>
-                      <Input
-                        id="professor"
-                        placeholder="Prof. Juan Dela Cruz"
-                        value={professor}
-                        onChange={(e) => setProfessor(e.target.value)}
-                        className="transition-all focus:ring-2 focus:ring-primary/20"
-                      />
-                    </div>
+                    {hasBooks() && (
+                      <div className="space-y-2">
+                        <Label htmlFor="professor">Professor Name (Required for Books)</Label>
+                        <Input
+                          id="professor"
+                          placeholder="Prof. Juan Dela Cruz"
+                          value={professor}
+                          onChange={(e) => setProfessor(e.target.value)}
+                          className="transition-all focus:ring-2 focus:ring-primary/20"
+                          required
+                        />
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

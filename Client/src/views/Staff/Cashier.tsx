@@ -307,12 +307,15 @@ export default function Cashier() {
         const response = await fetch(`http://localhost:5272/api/cashier/${cashierToDelete.id}`, {
           method: 'DELETE',
           headers: {
-            'Authorization': `Bearer ${localStorage.getItem('token')}`
+            'Authorization': `Bearer ${localStorage.getItem('token')}`,
+            'Content-Type': 'application/json'
           }
         });
 
+        const data = await response.json();
+
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          throw new Error(data.message || 'Failed to delete cashier');
         }
 
         await fetchCashiers();
@@ -320,9 +323,10 @@ export default function Cashier() {
         setCashierToDelete(null);
       } catch (error) {
         console.error('Error deleting cashier:', error);
+        alert(error instanceof Error ? error.message : 'Failed to delete cashier');
       }
     }
-  }
+  };
 
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">

@@ -10,7 +10,7 @@ public record CustomerInfoDto(
     string Name,
     string StudentId,
     string ContactNumber,
-    string Professor
+    string? Professor
 );
 
 public record OrderDto(

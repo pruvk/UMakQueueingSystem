@@ -14,7 +14,6 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
-import Dashboard from './Dashboard'
 import Cashier from './Cashier'
 import Display from './Display'
 import Inventory from './Inventory'
@@ -25,11 +24,10 @@ export default function StaffLayout() {
   
   const getBreadcrumbTitle = () => {
     switch(currentPath) {
-      case 'dashboard': return 'Dashboard'
       case 'cashier': return 'Cashier'
       case 'display': return 'Display'
       case 'inventory': return 'Inventory Management'
-      default: return 'Dashboard'
+      default: return 'Cashier'
     }
   }
 
@@ -53,11 +51,10 @@ export default function StaffLayout() {
           </Breadcrumb>
         </header>
         <Routes>
-          <Route path="dashboard" element={<Dashboard />} />
           <Route path="cashier" element={<Cashier />} />
           <Route path="display" element={<Display />} />
           <Route path="inventory" element={<Inventory />} />
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/" element={<Cashier />} />
         </Routes>
       </SidebarInset>
     </SidebarProvider>

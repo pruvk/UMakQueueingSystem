@@ -20,6 +20,8 @@ import Display from './views/Staff/Display'
 import QueueConfirmation from "@/views/Device/QueueConfirmation"
 import Transactions from './views/Admin/Transactions'
 import Reports from './views/Admin/Reports'
+import DisplayOnly from "./views/Staff/DisplayOnly"
+import { DisplayProvider } from "@/contexts/DisplayContext"
 
 // Protected Route components
 const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
@@ -91,58 +93,69 @@ const ProtectedDeviceRoute = ({ children }: { children: React.ReactNode }) => {
 function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
-      <CartProvider>
-        <Router>
-          <Routes>
-            <Route path="/login" element={<Login />} />
-            
-            {/* Admin Routes */}
-            <Route path="/admin" element={<ProtectedAdminRoute><AdminLayout /></ProtectedAdminRoute>}>
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="reports" element={<Reports />} />
-              <Route path="staffs" element={<StaffManagement />} />
-              <Route path="devices" element={<DeviceManagement />} />
-              <Route path="transactions" element={<Transactions />} />
-              <Route path="" element={<Navigate to="/admin/dashboard" replace />} />
-            </Route>
-            
-            {/* Staff Routes */}
-            <Route path="/staff/*" element={<ProtectedStaffRoute><StaffLayout /></ProtectedStaffRoute>}>
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="cashier" element={<Cashier />} />
-              <Route path="display" element={<Display />} />
-              <Route path="inventory" element={<Inventory />} />
-              <Route path="" element={<Navigate to="/staff/dashboard" replace />} />
-            </Route>
-            
-            {/* Device Routes - Order matters! */}
-            <Route path="/device/queue-confirmation" element={
-              <ProtectedDeviceRoute>
-                <QueueConfirmation />
-              </ProtectedDeviceRoute>
-            } />
-            <Route path="/device/checkout" element={
-              <ProtectedDeviceRoute>
-                <Checkout />
-              </ProtectedDeviceRoute>
-            } />
-            <Route path="/device/cart" element={
-              <ProtectedDeviceRoute>
-                <Cart />
-              </ProtectedDeviceRoute>
-            } />
-            {/* This catch-all route must be last */}
-            <Route path="/device/*" element={
-              <ProtectedDeviceRoute>
-                <DeviceLayout />
-              </ProtectedDeviceRoute>
-            } />
+      <DisplayProvider>
+        <CartProvider>
+          <Router>
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              
+              {/* Admin Routes */}
+              <Route path="/admin" element={<ProtectedAdminRoute><AdminLayout /></ProtectedAdminRoute>}>
+                <Route path="dashboard" element={<Dashboard />} />
+                <Route path="reports" element={<Reports />} />
+                <Route path="staffs" element={<StaffManagement />} />
+                <Route path="devices" element={<DeviceManagement />} />
+                <Route path="transactions" element={<Transactions />} />
+                <Route path="" element={<Navigate to="/admin/dashboard" replace />} />
+              </Route>
+              
+              {/* Staff Routes */}
+              <Route path="/staff/*" element={<ProtectedStaffRoute><StaffLayout /></ProtectedStaffRoute>}>
+                <Route path="cashier" element={<Cashier />} />
+                <Route path="display" element={<Display />} />
+                <Route path="inventory" element={<Inventory />} />
+                <Route path="" element={<Navigate to="/staff/cashier" replace />} />
+              </Route>
+              
+              {/* Add the display-only route outside the staff layout */}
+              <Route 
+                path="/staff/display-only" 
+                element={
+                  <ProtectedStaffRoute>
+                    <DisplayOnly />
+                  </ProtectedStaffRoute>
+                } 
+              />
 
-            <Route path="/" element={<Navigate to="/login" replace />} />
-          </Routes>
-          <Toaster />
-        </Router>
-      </CartProvider>
+              {/* Device Routes - Order matters! */}
+              <Route path="/device/queue-confirmation" element={
+                <ProtectedDeviceRoute>
+                  <QueueConfirmation />
+                </ProtectedDeviceRoute>
+              } />
+              <Route path="/device/checkout" element={
+                <ProtectedDeviceRoute>
+                  <Checkout />
+                </ProtectedDeviceRoute>
+              } />
+              <Route path="/device/cart" element={
+                <ProtectedDeviceRoute>
+                  <Cart />
+                </ProtectedDeviceRoute>
+              } />
+              {/* This catch-all route must be last */}
+              <Route path="/device/*" element={
+                <ProtectedDeviceRoute>
+                  <DeviceLayout />
+                </ProtectedDeviceRoute>
+              } />
+
+              <Route path="/" element={<Navigate to="/login" replace />} />
+            </Routes>
+            <Toaster />
+          </Router>
+        </CartProvider>
+      </DisplayProvider>
     </ThemeProvider>
   )
 }

@@ -1,12 +1,12 @@
 import { createContext, useContext, useState, ReactNode } from 'react'
 
-export type CartItem = {
+interface CartItem {
   id: number
   name: string
   price: number
   quantity: number
   image?: string
-  description?: string
+  type: string
 }
 
 type CartContextType = {
