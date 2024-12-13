@@ -80,7 +80,10 @@ export default function DisplayOnly() {
     activeCashierNumbers.includes(q.queueNumber)
   )
   
-  const waiting = queues.filter(q => q.status === "waiting" && q.queueNumber !== "0000").slice(0, 5)
+  const waiting = queues
+    .filter(q => q.status === "waiting" && q.queueNumber !== "0000")
+    .sort((a, b) => a.queueNumber.localeCompare(b.queueNumber))
+    .slice(0, 5)
 
   // Dynamic sizing based on number of items
   const getServingTextSize = (count: number) => {

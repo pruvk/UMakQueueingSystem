@@ -73,7 +73,7 @@ export default function Reports() {
     },
     {
       title: "Transaction Report",
-      description: "Generate a report of all transactions within a specified date range",
+      description: "Generate a report of all transactions including their status (completed/cancelled)",
       icon: <History className="h-8 w-8" />,
       type: "transactions",
       onClick: async () => {

@@ -92,7 +92,10 @@ export default function Display() {
     activeCashierNumbers.includes(q.queueNumber)
   )
   
-  const waiting = queues.filter(q => q.status === "waiting" && q.queueNumber !== "0000").slice(0, 5)
+  const waiting = queues
+    .filter(q => q.status === "waiting" && q.queueNumber !== "0000")
+    .sort((a, b) => a.queueNumber.localeCompare(b.queueNumber))
+    .slice(0, 5)
 
   const handlePopOut = () => {
     // Open a new window with the display content

@@ -97,10 +97,10 @@ export function LoginForm() {
     <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[400px]">
       <div className="flex flex-col space-y-2 text-center">
         <h1 className="text-3xl font-bold tracking-tight">
-          Welcome Back
+          Welcome
         </h1>
         <p className="text-sm text-muted-foreground">
-          Sign in to access the cooperative store management system
+          Sign in to access the cooperative queueing system
         </p>
       </div>
       <Card className="border-2">
@@ -185,11 +185,6 @@ export function LoginForm() {
           </Tabs>
         </CardContent>
       </Card>
-      <p className="px-8 text-center text-sm text-muted-foreground">
-        <a href="#" className="hover:text-primary underline underline-offset-4">
-          Need help? Contact IT Support
-        </a>
-      </p>
       <ModeToggle className="absolute top-4 right-4" />
     </div>
   )
