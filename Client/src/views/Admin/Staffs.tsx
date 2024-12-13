@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react"
+import { useState, useEffect } from "react"
 import { StaffsTable } from "@/components/staffs-table"
+import { useToast } from "@/hooks/use-toast"
 
 interface Staff {
   userId: number
@@ -14,97 +15,98 @@ interface Staff {
 
 export default function StaffManagement() {
   const [staffs, setStaffs] = useState<Staff[]>([])
-  const [error, setError] = useState<string | null>(null)
+  const { toast } = useToast()
 
-  useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      console.log('No token found - user needs to login')
-      return
-    }
-
-    const fetchStaffs = async () => {
-      try {
-        const response = await fetch('http://localhost:5272/api/users', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
-        if (!response.ok) throw new Error('Failed to fetch staffs')
+  const fetchStaffs = async () => {
+    try {
+      const response = await fetch("http://localhost:5272/api/users", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        }
+      })
+      if (response.ok) {
         const data = await response.json()
         setStaffs(data)
-      } catch (error) {
-        console.error('Error fetching staffs:', error)
       }
+    } catch (error) {
+      console.error("Error fetching staffs:", error)
     }
+  }
 
+  useEffect(() => {
     fetchStaffs()
   }, [])
 
-  const handleEdit = async (staffData: {
+  const handleEdit = async (staff: {
+    userId: number
     username: string
     firstName: string
     middleName?: string
     lastName?: string
   }) => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await fetch(`http://localhost:5272/api/users/${staffData.username}`, {
-        method: 'PUT',
+      const response = await fetch(`http://localhost:5272/api/users/${staff.userId}`, {
+        method: "PUT",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`
         },
-        body: JSON.stringify(staffData),
+        body: JSON.stringify({
+          firstName: staff.firstName,
+          middleName: staff.middleName,
+          lastName: staff.lastName
+        })
       })
 
       if (!response.ok) {
-        throw new Error('Failed to update staff member')
+        const errorData = await response.json()
+        throw new Error(errorData.message || "Failed to update staff")
       }
 
-      // Refresh the staff list
-      const updatedResponse = await fetch('http://localhost:5272/api/users', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json'
-        }
+      await fetchStaffs()
+      toast({
+        title: "Success",
+        description: "Staff updated successfully",
       })
-      
-      if (!updatedResponse.ok) {
-        throw new Error('Failed to fetch updated staff list')
-      }
-      
-      const updatedData = await updatedResponse.json()
-      setStaffs(updatedData)
     } catch (error) {
-      console.error('Error updating staff:', error)
-      setError('Failed to update staff member')
+      console.error("Error updating staff:", error)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update staff",
+      })
     }
   }
 
   const handleDelete = async (staff: Staff) => {
     try {
-      const token = localStorage.getItem('token')
       const response = await fetch(`http://localhost:5272/api/users/${staff.userId}`, {
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${localStorage.getItem("token")}`
         }
       })
 
       if (!response.ok) {
-        throw new Error('Failed to delete staff member')
+        throw new Error("Failed to delete staff")
       }
 
-      // Update the local state to remove the deleted staff
-      setStaffs(staffs.filter(s => s.userId !== staff.userId))
+      await fetchStaffs()
+      toast({
+        title: "Success",
+        description: "Staff deleted successfully",
+      })
     } catch (error) {
-      console.error('Error deleting staff:', error)
-      setError('Failed to delete staff member')
+      console.error("Error deleting staff:", error)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete staff",
+      })
     }
   }
 
-  const handleAddStaff = async (staffData: {
+  const handleAdd = async (staffData: {
     username: string
     password: string
     firstName: string
@@ -112,60 +114,48 @@ export default function StaffManagement() {
     lastName?: string
   }) => {
     try {
-      const token = localStorage.getItem('token')
-      const response = await fetch('http://localhost:5272/api/users', {
-        method: 'POST',
+      const response = await fetch("http://localhost:5272/api/users", {
+        method: "POST",
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`
         },
-        body: JSON.stringify({
-          ...staffData,
-          role: 'staff' // Set role as staff
-        }),
+        body: JSON.stringify(staffData)
       })
 
       if (!response.ok) {
-        throw new Error('Failed to create staff member')
+        const errorData = await response.json()
+        throw new Error(errorData || "Failed to add staff")
       }
 
-      // Fetch updated staff list
-      const updatedResponse = await fetch('http://localhost:5272/api/users', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json'
-        }
+      await fetchStaffs()
+      toast({
+        title: "Success",
+        description: "Staff added successfully",
       })
-      
-      if (!updatedResponse.ok) {
-        throw new Error('Failed to fetch updated staff list')
-      }
-      
-      const updatedData = await updatedResponse.json()
-      setStaffs(updatedData)
     } catch (error) {
-      console.error('Error adding staff:', error)
-      setError('Failed to add staff member')
+      console.error("Error adding staff:", error)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to add staff",
+      })
     }
   }
 
   return (
-    <div className="p-6">
-      <div className="mb-8">
+    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+      <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight">Staff Management</h2>
-        <p className="text-muted-foreground">
-          Manage your staff members here
-        </p>
       </div>
-
-      <StaffsTable
-        data={staffs}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        onAdd={handleAddStaff}
-      />
-
-      {/* ... existing AlertDialog ... */}
+      <div className="hidden h-full flex-1 flex-col space-y-8 md:flex">
+        <StaffsTable
+          data={staffs}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onAdd={handleAdd}
+        />
+      </div>
     </div>
   )
 }
