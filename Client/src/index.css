@@ -118,3 +118,18 @@
     @apply transition-opacity duration-200 ease-in-out;
   }
 }
+
+/* Keep only these Tremor variables */
+:root {
+  --tremor-ring-offset-color: #ffffff;
+  --tremor-ring-color: rgb(var(--primary));
+  --tremor-background-color: transparent;
+  --tremor-background-muted: transparent;
+  --tremor-border-color: transparent;
+  --tremor-content: #ffffff;
+  --tremor-content-emphasis: #ffffff;
+  --tremor-content-muted: #ffffff;
+  --tremor-content-subtle: #ffffff;
+}
+
+

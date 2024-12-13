@@ -1,14 +1,21 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace Server.Models;
 
 public class Queue
 {
+    [Key]
     public int QueueId { get; set; }
-    public string QueueNumber { get; set; } = null!;
-    public int OrderId { get; set; }
-    public Order Order { get; set; } = null!;
-    public string Status { get; set; } = "waiting"; // waiting, serving, completed, cancelled
-    public int? CashierId { get; set; }  // The cashier currently serving this queue
+    public string QueueNumber { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public int? OrderId { get; set; }
+    public int? CashierId { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-    public DateTime? CalledAt { get; set; }  // When the customer was called
+    public DateTime? CalledAt { get; set; }
     public DateTime? CompletedAt { get; set; }
+
+    // Navigation properties
+    public Order? Order { get; set; }
+    public Cashier? Cashier { get; set; }
+    public Transaction? Transaction { get; set; }
 } 
