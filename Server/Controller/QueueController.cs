@@ -8,7 +8,7 @@ using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
-namespace Server.Controllers
+namespace Server.Controller
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -192,9 +192,29 @@ namespace Server.Controllers
                     });
                 }
 
+                var username = User.FindFirst(ClaimTypes.Name)?.Value;
+
+                // Create transaction record for cancelled transaction
+                var transaction = new Transaction
+                {
+                    QueueNumber = queueNumber,
+                    Status = "cancelled",
+                    CompletedAt = DateTime.UtcNow,
+                    CompletedBy = username ?? "unknown",
+                    OrderId = queue.OrderId
+                };
+
+                _context.Transactions.Add(transaction);
+
                 // Update queue status
                 queue.Status = "cancelled";
                 queue.CompletedAt = DateTime.UtcNow;
+
+                // Update order status
+                if (queue.Order != null)
+                {
+                    queue.Order.Status = "cancelled";
+                }
 
                 // Reset cashier's current number if assigned
                 if (queue.CashierId.HasValue)
@@ -223,6 +243,55 @@ namespace Server.Controllers
                     Message = "Failed to cancel queue",
                     Error = ex.Message,
                     Data = default
+                });
+            }
+        }
+
+        [HttpGet("number/{queueNumber}")]
+        [Authorize(Roles = "staff")]
+        public async Task<ActionResult<ApiResponse<QueueDto>>> GetQueueByNumber(string queueNumber)
+        {
+            try
+            {
+                var queue = await _context.Queues
+                    .FirstOrDefaultAsync(q => q.QueueNumber == queueNumber);
+
+                if (queue == null)
+                {
+                    return NotFound(new ApiResponse<QueueDto>
+                    {
+                        Success = false,
+                        Message = "Queue not found",
+                        Data = default
+                    });
+                }
+
+                var queueDto = new QueueDto
+                {
+                    QueueId = queue.QueueId,
+                    QueueNumber = queue.QueueNumber,
+                    Status = queue.Status,
+                    OrderId = queue.OrderId,
+                    CashierId = queue.CashierId,
+                    CreatedAt = queue.CreatedAt,
+                    CalledAt = queue.CalledAt,
+                    CompletedAt = queue.CompletedAt
+                };
+
+                return Ok(new ApiResponse<QueueDto>
+                {
+                    Success = true,
+                    Message = "Queue found",
+                    Data = queueDto
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ApiResponse<QueueDto>
+                {
+                    Success = false,
+                    Message = "Failed to get queue",
+                    Error = ex.Message
                 });
             }
         }

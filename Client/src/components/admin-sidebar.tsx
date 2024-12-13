@@ -1,6 +1,6 @@
 import * as React from "react"
 import { useLocation, Link, useNavigate } from "react-router-dom"
-import { LayoutDashboard, FileText, Users, Building2, LogOut, Laptop } from "lucide-react"
+import { LayoutDashboard, FileText, Users, Building2, LogOut, Laptop, History } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -42,6 +42,11 @@ const data = {
           title: "Device Management",
           url: "/admin/devices",
           icon: <Laptop className="h-4 w-4" />,
+        },
+        {
+          title: "Transaction History",
+          url: "/admin/transactions",
+          icon: <History className="h-4 w-4" />,
         },
       ],
     },

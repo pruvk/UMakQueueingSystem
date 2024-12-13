@@ -17,6 +17,10 @@ public class AuthDbContext : DbContext
     public DbSet<Cashier> Cashiers { get; set; }
     public DbSet<Queue> Queues { get; set; } = null!;
     public DbSet<Transaction> Transactions { get; set; } = null!;
+    public DbSet<DailyStats> DailyStats { get; set; }
+    public DbSet<ProductStats> ProductStats { get; set; }
+    public DbSet<StaffStats> StaffStats { get; set; }
+    public DbSet<InventoryLog> InventoryLogs { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

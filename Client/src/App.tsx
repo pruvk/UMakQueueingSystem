@@ -18,6 +18,8 @@ import { CartProvider } from "@/contexts/CartContext"
 import { Toaster } from "@/components/ui/toaster"
 import Display from './views/Staff/Display'
 import QueueConfirmation from "@/views/Device/QueueConfirmation"
+import Transactions from './views/Admin/Transactions'
+import Reports from './views/Admin/Reports'
 
 // Protected Route components
 const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
@@ -97,8 +99,10 @@ function App() {
             {/* Admin Routes */}
             <Route path="/admin" element={<ProtectedAdminRoute><AdminLayout /></ProtectedAdminRoute>}>
               <Route path="dashboard" element={<Dashboard />} />
+              <Route path="reports" element={<Reports />} />
               <Route path="staffs" element={<StaffManagement />} />
               <Route path="devices" element={<DeviceManagement />} />
+              <Route path="transactions" element={<Transactions />} />
               <Route path="" element={<Navigate to="/admin/dashboard" replace />} />
             </Route>
             

@@ -57,7 +57,11 @@ export default function Cashier() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [cashierToDelete, setCashierToDelete] = useState<CashierStation | null>(null)
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
-  const [queueToCancel, setQueueToCancel] = useState<{cashierId: number, queueNumber: string} | null>(null);
+  const [queueToCancel, setQueueToCancel] = useState<{
+    cashierId: number, 
+    queueNumber: string,
+    queueId: number
+  } | null>(null);
 
   // Add useEffect to fetch cashiers on component mount
   useEffect(() => { 
@@ -210,7 +214,11 @@ export default function Cashier() {
         return;
     }
 
-    setQueueToCancel({ cashierId, queueNumber: cashier.currentNumber });
+    setQueueToCancel({ 
+        cashierId, 
+        queueNumber: cashier.currentNumber,
+        queueId: 0  // We don't need the actual ID since we'll use queue number
+    });
     setIsCancelDialogOpen(true);
   }
 
@@ -233,8 +241,8 @@ export default function Cashier() {
 
         await fetchCashiers();
     } catch (error) {
-        console.error('Error cancelling service:', error);
-        alert("Error cancelling service: " + (error instanceof Error ? error.message : "Unknown error"));
+        console.error('Error cancelling queue:', error);
+        alert("Error cancelling queue: " + (error instanceof Error ? error.message : "Unknown error"));
     } finally {
         setIsCancelDialogOpen(false);
         setQueueToCancel(null);

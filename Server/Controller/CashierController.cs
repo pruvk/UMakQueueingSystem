@@ -6,7 +6,7 @@ using Server.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 
-namespace Server.Controllers
+namespace Server.Controller
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -107,6 +107,70 @@ namespace Server.Controllers
             }
         }
 
+        [HttpPost("queue/{queueId}/cancel")]
+        [Authorize(Roles = "staff")]
+        public async Task<ActionResult<ApiResponse<string>>> CancelTransaction(int queueId)
+        {
+            try 
+            {
+                var username = User.FindFirst(ClaimTypes.Name)?.Value;
+                
+                var queue = await _context.Queues
+                    .Include(q => q.Order)
+                    .FirstOrDefaultAsync(q => q.QueueId == queueId);
+
+                if (queue == null)
+                {
+                    return NotFound(new ApiResponse<string>
+                    {
+                        Success = false,
+                        Message = "Queue not found",
+                        Data = default
+                    });
+                }
+
+                // Create transaction record for cancelled transaction
+                var transaction = new Transaction
+                {
+                    QueueNumber = queue.QueueNumber,
+                    Status = "cancelled",
+                    CompletedAt = DateTime.UtcNow,
+                    CompletedBy = username ?? "unknown",
+                    OrderId = queue.OrderId
+                };
+
+                _context.Transactions.Add(transaction);
+                
+                // Update queue status
+                queue.Status = "cancelled";
+                queue.CompletedAt = DateTime.UtcNow;
+
+                // Update order status
+                if (queue.Order != null)
+                {
+                    queue.Order.Status = "cancelled";
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new ApiResponse<string>
+                {
+                    Success = true,
+                    Message = "Transaction cancelled successfully",
+                    Data = default
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ApiResponse<string>
+                {
+                    Success = false,
+                    Message = "Failed to cancel transaction",
+                    Error = ex.Message
+                });
+            }
+        }
+
          // DELETE: api/Cashier/5
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteCashier(int id)
@@ -195,6 +259,104 @@ namespace Server.Controllers
                 {
                     Success = false,
                     Message = "Failed to get next queue",
+                    Error = ex.Message
+                });
+            }
+        }
+
+        [HttpGet("queue/number/{queueNumber}")]
+        [Authorize(Roles = "staff")]
+        public async Task<ActionResult<ApiResponse<QueueDto>>> GetQueueByNumber(string queueNumber)
+        {
+            try
+            {
+                var queue = await _context.Queues
+                    .FirstOrDefaultAsync(q => q.QueueNumber == queueNumber);
+
+                if (queue == null)
+                {
+                    return NotFound(new ApiResponse<QueueDto>
+                    {
+                        Success = false,
+                        Message = "Queue not found",
+                        Data = default
+                    });
+                }
+
+                var queueDto = new QueueDto
+                {
+                    QueueId = queue.QueueId,
+                    QueueNumber = queue.QueueNumber,
+                    Status = queue.Status,
+                    OrderId = queue.OrderId,
+                    CashierId = queue.CashierId,
+                    CreatedAt = queue.CreatedAt,
+                    CalledAt = queue.CalledAt,
+                    CompletedAt = queue.CompletedAt
+                };
+
+                return Ok(new ApiResponse<QueueDto>
+                {
+                    Success = true,
+                    Message = "Queue found",
+                    Data = queueDto
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ApiResponse<QueueDto>
+                {
+                    Success = false,
+                    Message = "Failed to get queue",
+                    Error = ex.Message
+                });
+            }
+        }
+
+        [HttpGet("queue/serving/{queueNumber}")]
+        [Authorize(Roles = "staff")]
+        public async Task<ActionResult<ApiResponse<QueueDto>>> GetServingQueue(string queueNumber)
+        {
+            try
+            {
+                var queue = await _context.Queues
+                    .FirstOrDefaultAsync(q => q.QueueNumber == queueNumber && q.Status == "serving");
+
+                if (queue == null)
+                {
+                    return NotFound(new ApiResponse<QueueDto>
+                    {
+                        Success = false,
+                        Message = "Queue not found or not currently being served",
+                        Data = default
+                    });
+                }
+
+                var queueDto = new QueueDto
+                {
+                    QueueId = queue.QueueId,
+                    QueueNumber = queue.QueueNumber,
+                    Status = queue.Status,
+                    OrderId = queue.OrderId,
+                    CashierId = queue.CashierId,
+                    CreatedAt = queue.CreatedAt,
+                    CalledAt = queue.CalledAt,
+                    CompletedAt = queue.CompletedAt
+                };
+
+                return Ok(new ApiResponse<QueueDto>
+                {
+                    Success = true,
+                    Message = "Queue found",
+                    Data = queueDto
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new ApiResponse<QueueDto>
+                {
+                    Success = false,
+                    Message = "Failed to get queue",
                     Error = ex.Message
                 });
             }
