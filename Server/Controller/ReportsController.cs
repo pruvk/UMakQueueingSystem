@@ -35,60 +35,82 @@ namespace Server.Controller
                     .OrderBy(u => u.UserId)
                     .ToListAsync();
 
-                var document = Document.Create(container =>
+                // Create new PDF document
+                var document = new PdfDocument();
+                var page = document.AddPage();
+                page.Size = PdfSharpCore.PageSize.A4;
+                var gfx = XGraphics.FromPdfPage(page);
+
+                // Define fonts
+                var regularFont = new XFont("Arial", 10);
+                var boldFont = new XFont("Arial", 10, XFontStyle.Bold);
+                var titleFont = new XFont("Arial", 16, XFontStyle.Bold);
+                var subtitleFont = new XFont("Arial", 12);
+
+                // Define colors
+                var headerBgColor = XColor.FromArgb(240, 240, 240);
+                var borderColor = XColor.FromArgb(200, 200, 200);
+                var textColor = XBrushes.Black;
+
+                // Draw header
+                gfx.DrawString("UMak Cooperative", titleFont, textColor, 50, 50);
+                gfx.DrawString("Staff Report", subtitleFont, textColor, 50, 70);
+                gfx.DrawString($"Generated on: {DateTime.Now:MMMM dd, yyyy}", regularFont, textColor, 50, 90);
+
+                // Draw table header
+                var startY = 120;
+                var rowHeight = 25;
+                var col1X = 50;  // ID
+                var col2X = 100; // Name
+                var col3X = 250; // Username
+                var col4X = 400; // Created At
+                var tableWidth = 500;
+
+                // Draw header background
+                var headerRect = new XRect(col1X, startY, tableWidth, rowHeight);
+                gfx.DrawRectangle(new XSolidBrush(headerBgColor), headerRect);
+                gfx.DrawRectangle(new XPen(borderColor), headerRect);
+
+                // Draw header text
+                gfx.DrawString("ID", boldFont, textColor, col1X + 5, startY + 16);
+                gfx.DrawString("Name", boldFont, textColor, col2X + 5, startY + 16);
+                gfx.DrawString("Username", boldFont, textColor, col3X + 5, startY + 16);
+                gfx.DrawString("Created At", boldFont, textColor, col4X + 5, startY + 16);
+
+                // Draw data rows
+                var currentY = startY + rowHeight;
+                foreach (var staff in staffMembers)
                 {
-                    container.Page(page =>
+                    // Draw row background and border
+                    var rowRect = new XRect(col1X, currentY, tableWidth, rowHeight);
+                    gfx.DrawRectangle(new XPen(borderColor), rowRect);
+
+                    // Draw cell data
+                    gfx.DrawString(staff.UserId.ToString(), regularFont, textColor, col1X + 5, currentY + 16);
+                    gfx.DrawString($"{staff.FirstName} {staff.LastName}", regularFont, textColor, col2X + 5, currentY + 16);
+                    gfx.DrawString(staff.Username, regularFont, textColor, col3X + 5, currentY + 16);
+                    gfx.DrawString(staff.CreatedAt.ToLocalTime().ToString("MM/dd/yyyy"), regularFont, textColor, col4X + 5, currentY + 16);
+
+                    currentY += rowHeight;
+
+                    // Add new page if needed
+                    if (currentY > page.Height - 100)
                     {
-                        page.Header().Element(ComposeHeader);
-                        
-                        page.Content().Element(container =>
-                        {
-                            container.Table(table =>
-                            {
-                                // Define columns
-                                table.ColumnsDefinition(columns =>
-                                {
-                                    columns.RelativeColumn();
-                                    columns.RelativeColumn();
-                                    columns.RelativeColumn();
-                                    columns.RelativeColumn();
-                                });
+                        page = document.AddPage();
+                        page.Size = PdfSharpCore.PageSize.A4;
+                        gfx = XGraphics.FromPdfPage(page);
+                        currentY = 50;
+                    }
+                }
 
-                                // Add header row
-                                table.Header(header =>
-                                {
-                                    header.Cell().Text("ID");
-                                    header.Cell().Text("Name");
-                                    header.Cell().Text("Username");
-                                    header.Cell().Text("Created At");
-                                });
+                // Draw summary
+                currentY += 20;
+                gfx.DrawString($"Total Staff Members: {staffMembers.Count}", boldFont, textColor, col1X, currentY);
 
-                                // Add data rows
-                                foreach (var staff in staffMembers)
-                                {
-                                    table.Cell().Text(staff.UserId);
-                                    table.Cell().Text($"{staff.FirstName} {staff.LastName}");
-                                    table.Cell().Text(staff.Username);
-                                    table.Cell().Text(staff.CreatedAt.ToLocalTime().ToString("MM/dd/yyyy"));
-                                }
-                            });
-                        });
-
-                        page.Footer()
-                            .AlignCenter()
-                            .Text(x =>
-                            {
-                                x.Span("Page ");
-                                x.CurrentPageNumber();
-                                x.Span(" of ");
-                                x.TotalPages();
-                            });
-                    });
-                });
-
-                byte[] pdfBytes = document.GeneratePdf();
-
-                return File(pdfBytes, "application/pdf", "staff_report.pdf");
+                // Save to memory stream
+                using var stream = new MemoryStream();
+                document.Save(stream, false);
+                return File(stream.ToArray(), "application/pdf", "staff_report.pdf");
             }
             catch (Exception ex)
             {
@@ -105,63 +127,98 @@ namespace Server.Controller
                     .OrderBy(d => d.DeviceId)
                     .ToListAsync();
 
-                var document = Document.Create(container =>
+                // Create new PDF document
+                var document = new PdfDocument();
+                var page = document.AddPage();
+                page.Size = PdfSharpCore.PageSize.A4;
+                var gfx = XGraphics.FromPdfPage(page);
+
+                // Define fonts
+                var regularFont = new XFont("Arial", 10);
+                var boldFont = new XFont("Arial", 10, XFontStyle.Bold);
+                var titleFont = new XFont("Arial", 16, XFontStyle.Bold);
+                var subtitleFont = new XFont("Arial", 12);
+
+                // Define colors
+                var headerBgColor = XColor.FromArgb(240, 240, 240);
+                var borderColor = XColor.FromArgb(200, 200, 200);
+                var textColor = XBrushes.Black;
+
+                // Draw header
+                gfx.DrawString("UMak Cooperative", titleFont, textColor, 40, 50);
+                gfx.DrawString("Device Report", subtitleFont, textColor, 40, 70);
+                gfx.DrawString($"Generated on: {DateTime.Now:MMMM dd, yyyy}", regularFont, textColor, 40, 90);
+
+                // Draw table header
+                var startY = 120;
+                var rowHeight = 25;
+                var margin = 40;
+                var col1Width = 30;    // ID
+                var col2Width = 130;   // Device Name
+                var col3Width = 130;   // Model
+                var col4Width = 180;   // Owner (increased width)
+                var col5Width = 70;    // Type (slightly reduced)
+
+                var col1X = margin;
+                var col2X = col1X + col1Width;
+                var col3X = col2X + col2Width;
+                var col4X = col3X + col3Width;
+                var col5X = col4X + col4Width;
+                var tableWidth = col1Width + col2Width + col3Width + col4Width + col5Width;
+
+                // Draw header background
+                var headerRect = new XRect(margin, startY, tableWidth, rowHeight);
+                gfx.DrawRectangle(new XSolidBrush(headerBgColor), headerRect);
+                gfx.DrawRectangle(new XPen(borderColor), headerRect);
+
+                // Draw header text
+                gfx.DrawString("ID", boldFont, textColor, col1X + 5, startY + 16);
+                gfx.DrawString("Device Name", boldFont, textColor, col2X + 5, startY + 16);
+                gfx.DrawString("Model", boldFont, textColor, col3X + 5, startY + 16);
+                gfx.DrawString("Owner", boldFont, textColor, col4X + 5, startY + 16);
+                gfx.DrawString("Type", boldFont, textColor, col5X + 5, startY + 16);
+
+                // Draw data rows
+                var currentY = startY + rowHeight;
+                foreach (var device in devices)
                 {
-                    container.Page(page =>
+                    // Draw row background and border
+                    var rowRect = new XRect(margin, currentY, tableWidth, rowHeight);
+                    gfx.DrawRectangle(new XPen(borderColor), rowRect);
+
+                    // Draw vertical lines for columns
+                    gfx.DrawLine(new XPen(borderColor), col2X, currentY, col2X, currentY + rowHeight);
+                    gfx.DrawLine(new XPen(borderColor), col3X, currentY, col3X, currentY + rowHeight);
+                    gfx.DrawLine(new XPen(borderColor), col4X, currentY, col4X, currentY + rowHeight);
+                    gfx.DrawLine(new XPen(borderColor), col5X, currentY, col5X, currentY + rowHeight);
+
+                    // Draw cell data
+                    gfx.DrawString(device.DeviceId.ToString(), regularFont, textColor, col1X + 5, currentY + 16);
+                    gfx.DrawString(device.DeviceName ?? "N/A", regularFont, textColor, col2X + 5, currentY + 16);
+                    gfx.DrawString(device.DeviceModel ?? "N/A", regularFont, textColor, col3X + 5, currentY + 16);
+                    gfx.DrawString(device.DeviceOwner ?? "N/A", regularFont, textColor, col4X + 5, currentY + 16);
+                    gfx.DrawString(device.DeviceType ?? "N/A", regularFont, textColor, col5X + 5, currentY + 16);
+
+                    currentY += rowHeight;
+
+                    // Add new page if needed
+                    if (currentY > page.Height - 100)
                     {
-                        page.Header().Element(ComposeHeader);
-                        
-                        page.Content().Element(container =>
-                        {
-                            container.Table(table =>
-                            {
-                                // Define columns
-                                table.ColumnsDefinition(columns =>
-                                {
-                                    columns.RelativeColumn();
-                                    columns.RelativeColumn();
-                                    columns.RelativeColumn();
-                                    columns.RelativeColumn();
-                                    columns.RelativeColumn();
-                                });
+                        page = document.AddPage();
+                        page.Size = PdfSharpCore.PageSize.A4;
+                        gfx = XGraphics.FromPdfPage(page);
+                        currentY = 50;
+                    }
+                }
 
-                                // Add header row
-                                table.Header(header =>
-                                {
-                                    header.Cell().Text("ID");
-                                    header.Cell().Text("Device Name");
-                                    header.Cell().Text("Model");
-                                    header.Cell().Text("Owner");
-                                    header.Cell().Text("Type");
-                                });
+                // Draw summary
+                currentY += 20;
+                gfx.DrawString($"Total Devices: {devices.Count}", boldFont, textColor, margin, currentY);
 
-                                // Add data rows
-                                foreach (var device in devices)
-                                {
-                                    table.Cell().Text(device.DeviceId);
-                                    table.Cell().Text(device.DeviceName);
-                                    table.Cell().Text(device.DeviceModel);
-                                    table.Cell().Text(device.DeviceOwner);
-                                    table.Cell().Text(device.DeviceType);
-                                }
-                            });
-                        });
-
-                        page.Footer()
-                            .AlignCenter()
-                            .Text(x =>
-                            {
-                                x.Span("Page ");
-                                x.CurrentPageNumber();
-                                x.Span(" of ");
-                                x.TotalPages();
-                            });
-                    });
-                });
-
-                byte[] pdfBytes = document.GeneratePdf();
-
-                return File(pdfBytes, "application/pdf", "device_report.pdf");
+                // Save to memory stream
+                using var stream = new MemoryStream();
+                document.Save(stream, false);
+                return File(stream.ToArray(), "application/pdf", "device_report.pdf");
             }
             catch (Exception ex)
             {
@@ -179,91 +236,130 @@ namespace Server.Controller
                     .ThenBy(p => p.Name)
                     .ToListAsync();
 
-                var document = Document.Create(container =>
+                // Create new PDF document
+                var document = new PdfDocument();
+                var page = document.AddPage();
+                page.Size = PdfSharpCore.PageSize.A4;
+                var gfx = XGraphics.FromPdfPage(page);
+
+                // Define fonts
+                var regularFont = new XFont("Arial", 10);
+                var boldFont = new XFont("Arial", 10, XFontStyle.Bold);
+                var titleFont = new XFont("Arial", 16, XFontStyle.Bold);
+                var subtitleFont = new XFont("Arial", 12);
+                var smallFont = new XFont("Arial", 8);
+
+                // Define colors
+                var headerBgColor = XColor.FromArgb(240, 240, 240);
+                var borderColor = XColor.FromArgb(200, 200, 200);
+                var textColor = XBrushes.Black;
+
+                // Draw header
+                gfx.DrawString("UMak Cooperative", titleFont, textColor, 40, 50);
+                gfx.DrawString("Inventory Report", subtitleFont, textColor, 40, 70);
+                gfx.DrawString($"Generated on: {DateTime.Now:MMMM dd, yyyy}", regularFont, textColor, 40, 90);
+
+                var currentY = 120;
+                var margin = 40;
+                var rowHeight = 30;
+
+                // Group products by type
+                var groupedProducts = products.GroupBy(p => p.Type);
+                foreach (var group in groupedProducts)
                 {
-                    container.Page(page =>
+                    // Draw type header
+                    gfx.DrawString(group.Key.ToUpper(), boldFont, textColor, margin, currentY);
+                    currentY += 25;
+
+                    // Define column widths for this group
+                    var col1Width = 30;    // ID
+                    var col2Width = 150;   // Name & Description
+                    var col3Width = 100;   // Price
+                    var col4Width = 220;   // Additional Info
+                    var tableWidth = col1Width + col2Width + col3Width + col4Width;
+
+                    var col1X = margin;
+                    var col2X = col1X + col1Width;
+                    var col3X = col2X + col2Width;
+                    var col4X = col3X + col3Width;
+
+                    // Draw table header
+                    var headerRect = new XRect(margin, currentY, tableWidth, rowHeight);
+                    gfx.DrawRectangle(new XSolidBrush(headerBgColor), headerRect);
+                    gfx.DrawRectangle(new XPen(borderColor), headerRect);
+
+                    // Draw header text
+                    gfx.DrawString("ID", boldFont, textColor, col1X + 5, currentY + 16);
+                    gfx.DrawString("Name & Description", boldFont, textColor, col2X + 5, currentY + 16);
+                    gfx.DrawString("Price", boldFont, textColor, col3X + 5, currentY + 16);
+                    gfx.DrawString("Additional Info", boldFont, textColor, col4X + 5, currentY + 16);
+
+                    currentY += rowHeight;
+
+                    // Draw data rows
+                    foreach (var product in group)
                     {
-                        page.Header().Element(ComposeHeader);
+                        var rowRect = new XRect(margin, currentY, tableWidth, rowHeight);
+                        gfx.DrawRectangle(new XPen(borderColor), rowRect);
+
+                        // Draw vertical lines
+                        gfx.DrawLine(new XPen(borderColor), col2X, currentY, col2X, currentY + rowHeight);
+                        gfx.DrawLine(new XPen(borderColor), col3X, currentY, col3X, currentY + rowHeight);
+                        gfx.DrawLine(new XPen(borderColor), col4X, currentY, col4X, currentY + rowHeight);
+
+                        // Draw cell data
+                        gfx.DrawString(product.ProductId.ToString(), regularFont, textColor, col1X + 5, currentY + 16);
                         
-                        page.Content().Element(container =>
+                        // Name & Description (2 lines)
+                        gfx.DrawString(product.Name, boldFont, textColor, col2X + 5, currentY + 12);
+                        gfx.DrawString(product.Description, smallFont, textColor, col2X + 5, currentY + 24);
+                        
+                        gfx.DrawString($"₱{product.Price:N2}", regularFont, textColor, col3X + 5, currentY + 16);
+
+                        // Additional Info
+                        var infoY = currentY + 12;
+                        if (!string.IsNullOrEmpty(product.Author))
                         {
-                            // Group products by type
-                            var groupedProducts = products.GroupBy(p => p.Type);
-                            
-                            foreach (var group in groupedProducts)
-                            {
-                                // Add type header
-                                container.Column(column =>
-                                {
-                                    column.Item().PaddingBottom(5).Text(group.Key.ToUpper())
-                                        .FontSize(16)
-                                        .Bold();
+                            gfx.DrawString($"Author: {product.Author}", smallFont, textColor, col4X + 5, infoY);
+                            infoY += 10;
+                        }
+                        if (!string.IsNullOrEmpty(product.Subject))
+                        {
+                            gfx.DrawString($"Subject: {product.Subject}", smallFont, textColor, col4X + 5, infoY);
+                            infoY += 10;
+                        }
+                        if (!string.IsNullOrEmpty(product.Size))
+                        {
+                            gfx.DrawString($"Size: {product.Size}", smallFont, textColor, col4X + 5, infoY);
+                        }
+                        if (!string.IsNullOrEmpty(product.SchoolSupplyType))
+                        {
+                            gfx.DrawString($"Type: {product.SchoolSupplyType}", smallFont, textColor, col4X + 5, infoY);
+                        }
 
-                                    column.Item().Table(table =>
-                                    {
-                                        // Define columns
-                                        table.ColumnsDefinition(columns =>
-                                        {
-                                            columns.RelativeColumn();
-                                            columns.RelativeColumn(2); // Description gets more space
-                                            columns.RelativeColumn();
-                                            columns.RelativeColumn();
-                                        });
+                        currentY += rowHeight;
 
-                                        // Add header row
-                                        table.Header(header =>
-                                        {
-                                            header.Cell().Text("ID");
-                                            header.Cell().Text("Name & Description");
-                                            header.Cell().Text("Price");
-                                            header.Cell().Text("Additional Info");
-                                        });
+                        // Add new page if needed
+                        if (currentY > page.Height - 100)
+                        {
+                            page = document.AddPage();
+                            page.Size = PdfSharpCore.PageSize.A4;
+                            gfx = XGraphics.FromPdfPage(page);
+                            currentY = 50;
+                        }
+                    }
 
-                                        // Add data rows
-                                        foreach (var product in group)
-                                        {
-                                            table.Cell().Text(product.ProductId);
-                                            table.Cell().Column(c =>
-                                            {
-                                                c.Item().Text(product.Name).Bold();
-                                                c.Item().Text(product.Description)
-                                                    .FontSize(8);
-                                            });
-                                            table.Cell().Text($"₱{product.Price:N2}");
-                                            table.Cell().Column(c =>
-                                            {
-                                                if (!string.IsNullOrEmpty(product.Author))
-                                                    c.Item().Text($"Author: {product.Author}");
-                                                if (!string.IsNullOrEmpty(product.Subject))
-                                                    c.Item().Text($"Subject: {product.Subject}");
-                                                if (!string.IsNullOrEmpty(product.Size))
-                                                    c.Item().Text($"Size: {product.Size}");
-                                                if (!string.IsNullOrEmpty(product.SchoolSupplyType))
-                                                    c.Item().Text($"Type: {product.SchoolSupplyType}");
-                                            });
-                                        }
-                                    });
-                                    
-                                    column.Item().PaddingBottom(10);
-                                });
-                            }
-                        });
+                    currentY += 20; // Space between groups
+                }
 
-                        page.Footer()
-                            .AlignCenter()
-                            .Text(x =>
-                            {
-                                x.Span("Page ");
-                                x.CurrentPageNumber();
-                                x.Span(" of ");
-                                x.TotalPages();
-                            });
-                    });
-                });
+                // Draw summary
+                currentY += 10;
+                gfx.DrawString($"Total Products: {products.Count}", boldFont, textColor, margin, currentY);
 
-                byte[] pdfBytes = document.GeneratePdf();
-
-                return File(pdfBytes, "application/pdf", "inventory_report.pdf");
+                // Save to memory stream
+                using var stream = new MemoryStream();
+                document.Save(stream, false);
+                return File(stream.ToArray(), "application/pdf", "inventory_report.pdf");
             }
             catch (Exception ex)
             {
@@ -277,45 +373,109 @@ namespace Server.Controller
             try
             {
                 var transactions = await _context.Transactions
+                    .Include(t => t.Order)
                     .OrderByDescending(t => t.CompletedAt)
                     .ToListAsync();
 
                 // Create new PDF document
                 var document = new PdfDocument();
                 var page = document.AddPage();
+                page.Size = PdfSharpCore.PageSize.A4;
                 var gfx = XGraphics.FromPdfPage(page);
-                var font = new XFont("Arial", 12);
-                var titleFont = new XFont("Arial", 20, XFontStyle.Bold);
 
-                // Draw title
-                gfx.DrawString("Transaction Report", titleFont, XBrushes.Black, new XRect(40, 40, page.Width, 50), XStringFormats.TopLeft);
-                
-                // Draw date
-                gfx.DrawString($"Generated on: {DateTime.Now:MM/dd/yyyy}", font, XBrushes.Black, new XRect(40, 70, page.Width, 50), XStringFormats.TopLeft);
+                // Define fonts
+                var regularFont = new XFont("Arial", 10);
+                var boldFont = new XFont("Arial", 10, XFontStyle.Bold);
+                var titleFont = new XFont("Arial", 16, XFontStyle.Bold);
+                var subtitleFont = new XFont("Arial", 12);
 
-                // Draw content
-                var y = 120;
+                // Define colors
+                var headerBgColor = XColor.FromArgb(240, 240, 240);
+                var borderColor = XColor.FromArgb(200, 200, 200);
+                var textColor = XBrushes.Black;
+
+                // Draw header
+                gfx.DrawString("UMak Cooperative", titleFont, textColor, 40, 50);
+                gfx.DrawString("Transaction Report", subtitleFont, textColor, 40, 70);
+                gfx.DrawString($"Generated on: {DateTime.Now:MMMM dd, yyyy}", regularFont, textColor, 40, 90);
+
+                // Draw table header
+                var startY = 120;
+                var rowHeight = 25;
+                var margin = 40;
+                var col1Width = 80;    // Queue #
+                var col2Width = 100;   // Amount
+                var col3Width = 100;   // Payment Method
+                var col4Width = 120;   // Completed By
+                var col5Width = 140;   // Completed At
+                var tableWidth = col1Width + col2Width + col3Width + col4Width + col5Width;
+
+                var col1X = margin;
+                var col2X = col1X + col1Width;
+                var col3X = col2X + col2Width;
+                var col4X = col3X + col3Width;
+                var col5X = col4X + col4Width;
+
+                // Draw header background
+                var headerRect = new XRect(margin, startY, tableWidth, rowHeight);
+                gfx.DrawRectangle(new XSolidBrush(headerBgColor), headerRect);
+                gfx.DrawRectangle(new XPen(borderColor), headerRect);
+
+                // Draw header text
+                gfx.DrawString("Queue #", boldFont, textColor, col1X + 5, startY + 16);
+                gfx.DrawString("Amount", boldFont, textColor, col2X + 5, startY + 16);
+                gfx.DrawString("Payment", boldFont, textColor, col3X + 5, startY + 16);
+                gfx.DrawString("Completed By", boldFont, textColor, col4X + 5, startY + 16);
+                gfx.DrawString("Completed At", boldFont, textColor, col5X + 5, startY + 16);
+
+                // Draw data rows
+                var currentY = startY + rowHeight;
+                decimal totalAmount = 0;
+
                 foreach (var transaction in transactions)
                 {
-                    gfx.DrawString($"Queue #: {transaction.QueueNumber}", font, XBrushes.Black, 40, y);
-                    gfx.DrawString($"Completed By: {transaction.CompletedBy}", font, XBrushes.Black, 40, y + 20);
-                    gfx.DrawString($"Completed At: {transaction.CompletedAt:MM/dd/yyyy HH:mm}", font, XBrushes.Black, 40, y + 40);
-                    y += 80;
+                    // Draw row background and border
+                    var rowRect = new XRect(margin, currentY, tableWidth, rowHeight);
+                    gfx.DrawRectangle(new XPen(borderColor), rowRect);
+
+                    // Draw vertical lines for columns
+                    gfx.DrawLine(new XPen(borderColor), col2X, currentY, col2X, currentY + rowHeight);
+                    gfx.DrawLine(new XPen(borderColor), col3X, currentY, col3X, currentY + rowHeight);
+                    gfx.DrawLine(new XPen(borderColor), col4X, currentY, col4X, currentY + rowHeight);
+                    gfx.DrawLine(new XPen(borderColor), col5X, currentY, col5X, currentY + rowHeight);
+
+                    // Draw cell data
+                    gfx.DrawString(transaction.QueueNumber ?? "N/A", regularFont, textColor, col1X + 5, currentY + 16);
+                    gfx.DrawString(transaction.Order?.Total != null ? $"₱{transaction.Order.Total:N2}" : "N/A", regularFont, textColor, col2X + 5, currentY + 16);
+                    gfx.DrawString(transaction.Order?.PaymentMethod ?? "N/A", regularFont, textColor, col3X + 5, currentY + 16);
+                    gfx.DrawString(transaction.CompletedBy ?? "N/A", regularFont, textColor, col4X + 5, currentY + 16);
+                    gfx.DrawString(transaction.CompletedAt.ToLocalTime().ToString("MM/dd/yyyy HH:mm"), regularFont, textColor, col5X + 5, currentY + 16);
+
+                    if (transaction.Order?.Total != null)
+                    {
+                        totalAmount += transaction.Order.Total;
+                    }
+
+                    currentY += rowHeight;
 
                     // Add new page if needed
-                    if (y > page.Height - 100)
+                    if (currentY > page.Height - 100)
                     {
                         page = document.AddPage();
+                        page.Size = PdfSharpCore.PageSize.A4;
                         gfx = XGraphics.FromPdfPage(page);
-                        y = 40;
+                        currentY = 50;
                     }
                 }
 
-                // Save to memory stream
-                var stream = new MemoryStream();
-                document.Save(stream, false);
-                stream.Position = 0;
+                // Draw summary
+                currentY += 20;
+                gfx.DrawString($"Total Transactions: {transactions.Count}", boldFont, textColor, margin, currentY);
+                gfx.DrawString($"Total Amount: ₱{totalAmount:N2}", boldFont, textColor, margin, currentY + 20);
 
+                // Save to memory stream
+                using var stream = new MemoryStream();
+                document.Save(stream, false);
                 return File(stream.ToArray(), "application/pdf", "transaction_report.pdf");
             }
             catch (Exception ex)
