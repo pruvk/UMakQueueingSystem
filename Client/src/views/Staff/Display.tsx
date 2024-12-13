@@ -1,87 +1,95 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useEffect, useState } from "react"
+import { motion, AnimatePresence } from "framer-motion"
+
+interface Queue {
+  queueNumber: string
+  status: string
+}
 
 export default function Display() {
+  const [queues, setQueues] = useState<Queue[]>([])
+  const [audio] = useState(new Audio("/notification.mp3")) // Add a notification sound file
+
+  const fetchQueues = async () => {
+    try {
+      const response = await fetch('http://localhost:5272/api/Queue', {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch queues');
+      }
+
+      const data = await response.json();
+      setQueues(data);
+    } catch (error) {
+      console.error('Error fetching queues:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchQueues()
+    const interval = setInterval(fetchQueues, 3000) // Refresh every 3 seconds
+    return () => clearInterval(interval)
+  }, [])
+
+  const nowServing = queues.filter(q => q.status === "serving")
+  const waiting = queues.filter(q => q.status === "waiting").slice(0, 5)
+  const completed = queues.filter(q => q.status === "completed").slice(-3)
+
   return (
-    <div className="h-screen flex flex-col p-8 bg-background">
-      <div className="flex items-center justify-between mb-8">
-        <h2 className="text-4xl font-bold tracking-tight">UMak Coop Queueing System</h2>
-      </div>
-      <div className="flex-1 grid grid-cols-2 gap-12">
-        {/* In Queue Column */}
-        <div className="flex flex-col bg-muted/30 rounded-2xl p-8">
-          <h3 className="text-3xl font-semibold text-center mb-8">
-            <span className="bg-primary/10 text-primary px-6 py-2 rounded-full">In Queue</span>
-          </h3>
-          <div className="flex-1 grid grid-rows-3 gap-8">
-            <div className="relative overflow-hidden rounded-xl bg-background p-8 border-2 border-primary/20">
-              <div className="absolute top-0 left-0 w-2 h-full bg-primary" />
-              <div className="flex justify-between items-center">
-                <div className="space-y-2">
-                  <div className="text-2xl font-semibold text-primary">Cashier 1</div>
-                  <div className="text-sm text-muted-foreground">Next in line</div>
-                </div>
-                <div className="text-7xl font-bold text-primary tabular-nums">0001</div>
-              </div>
-            </div>
-            <div className="relative overflow-hidden rounded-xl bg-background p-8 border-2 border-primary/20">
-              <div className="absolute top-0 left-0 w-2 h-full bg-primary" />
-              <div className="flex justify-between items-center">
-                <div className="space-y-2">
-                  <div className="text-2xl font-semibold text-primary">Cashier 2</div>
-                  <div className="text-sm text-muted-foreground">Next in line</div>
-                </div>
-                <div className="text-7xl font-bold text-primary tabular-nums">0002</div>
-              </div>
-            </div>
-            <div className="relative overflow-hidden rounded-xl bg-background p-8 border-2 border-primary/20">
-              <div className="absolute top-0 left-0 w-2 h-full bg-primary" />
-              <div className="flex justify-between items-center">
-                <div className="space-y-2">
-                  <div className="text-2xl font-semibold text-primary">Cashier 3</div>
-                  <div className="text-sm text-muted-foreground">Next in line</div>
-                </div>
-                <div className="text-7xl font-bold text-primary tabular-nums">0003</div>
-              </div>
-            </div>
+    <div className="min-h-screen bg-black text-white p-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Now Serving */}
+        <div className="bg-blue-900 rounded-lg p-6">
+          <h2 className="text-2xl font-bold mb-4">NOW SERVING</h2>
+          <div className="space-y-4">
+            <AnimatePresence>
+              {nowServing.map((queue) => (
+                <motion.div
+                  key={queue.queueNumber}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="text-6xl font-bold text-center p-4 bg-blue-800 rounded-lg"
+                >
+                  {queue.queueNumber}
+                </motion.div>
+              ))}
+            </AnimatePresence>
           </div>
         </div>
 
-        {/* Now Serving Column */}
-        <div className="flex flex-col bg-muted/30 rounded-2xl p-8">
-          <h3 className="text-3xl font-semibold text-center mb-8">
-            <span className="bg-green-500/10 text-green-500 px-6 py-2 rounded-full">Now Serving</span>
-          </h3>
-          <div className="flex-1 grid grid-rows-3 gap-8">
-            <div className="relative overflow-hidden rounded-xl bg-background p-8 border-2 border-green-500/20">
-              <div className="absolute top-0 left-0 w-2 h-full bg-green-500" />
-              <div className="flex justify-between items-center">
-                <div className="space-y-2">
-                  <div className="text-2xl font-semibold text-green-500">Cashier 1</div>
-                  <div className="text-sm text-muted-foreground">Currently serving</div>
-                </div>
-                <div className="text-7xl font-bold text-green-500 tabular-nums">0000</div>
+        {/* Up Next */}
+        <div className="bg-gray-900 rounded-lg p-6">
+          <h2 className="text-2xl font-bold mb-4">UP NEXT</h2>
+          <div className="space-y-2">
+            {waiting.map((queue) => (
+              <div
+                key={queue.queueNumber}
+                className="text-3xl text-center p-2 bg-gray-800 rounded"
+              >
+                {queue.queueNumber}
               </div>
-            </div>
-            <div className="relative overflow-hidden rounded-xl bg-background p-8 border-2 border-green-500/20">
-              <div className="absolute top-0 left-0 w-2 h-full bg-green-500" />
-              <div className="flex justify-between items-center">
-                <div className="space-y-2">
-                  <div className="text-2xl font-semibold text-green-500">Cashier 2</div>
-                  <div className="text-sm text-muted-foreground">Currently serving</div>
-                </div>
-                <div className="text-7xl font-bold text-green-500 tabular-nums">0000</div>
+            ))}
+          </div>
+        </div>
+
+        {/* Recently Completed */}
+        <div className="bg-green-900 rounded-lg p-6 md:col-span-2">
+          <h2 className="text-2xl font-bold mb-4">COMPLETED</h2>
+          <div className="flex justify-center gap-4">
+            {completed.map((queue) => (
+              <div
+                key={queue.queueNumber}
+                className="text-2xl text-center p-2 bg-green-800 rounded min-w-[120px]"
+              >
+                {queue.queueNumber}
               </div>
-            </div>
-            <div className="relative overflow-hidden rounded-xl bg-background p-8 border-2 border-green-500/20">
-              <div className="absolute top-0 left-0 w-2 h-full bg-green-500" />
-              <div className="flex justify-between items-center">
-                <div className="space-y-2">
-                  <div className="text-2xl font-semibold text-green-500">Cashier 3</div>
-                  <div className="text-sm text-muted-foreground">Currently serving</div>
-                </div>
-                <div className="text-7xl font-bold text-green-500 tabular-nums">0000</div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>
