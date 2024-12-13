@@ -28,5 +28,7 @@ public record OrderResponseDto(
     List<OrderItemDto> Items,
     decimal Total,
     string Status,
+    CustomerInfoDto CustomerInfo,
+    string PaymentMethod,
     DateTime CreatedAt
 );

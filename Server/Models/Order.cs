@@ -8,6 +8,8 @@ public class Order
     public string Status { get; set; } = "pending"; // pending, processing, completed, cancelled
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public List<OrderItem> Items { get; set; } = new();
+    public CustomerInfo CustomerInfo { get; set; } = null!;
+    public string PaymentMethod { get; set; } = "cash";
 }
 
 public class OrderItem
@@ -19,4 +21,15 @@ public class OrderItem
     public decimal Price { get; set; }
     public Order Order { get; set; } = null!;
     public Product Product { get; set; } = null!;
+}
+
+public class CustomerInfo
+{
+    public int CustomerInfoId { get; set; }
+    public int OrderId { get; set; }
+    public string Name { get; set; } = null!;
+    public string StudentId { get; set; } = null!;
+    public string ContactNumber { get; set; } = null!;
+    public string Professor { get; set; } = null!;
+    public Order Order { get; set; } = null!;
 }

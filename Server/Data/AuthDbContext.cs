@@ -15,6 +15,8 @@ public class AuthDbContext : DbContext
     public DbSet<Order> Orders { get; set; }
     public DbSet<OrderItem> OrderItems { get; set; }
     public DbSet<Cashier> Cashiers { get; set; }
+    public DbSet<Queue> Queues { get; set; } = null!;
+    public DbSet<Transaction> Transactions { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -77,6 +79,32 @@ public class AuthDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).HasColumnName("cashierId");
             entity.ToTable("cashiers");
+        });
+
+        modelBuilder.Entity<Queue>(entity =>
+        {
+            entity.HasKey(e => e.QueueId);
+            entity.Property(e => e.QueueId).HasColumnName("queueId");
+            entity.Property(e => e.Status).HasConversion(
+                v => v.ToLower(),
+                v => v.ToLower()
+            );
+            entity.ToTable("queues");
+        });
+
+        modelBuilder.Entity<Queue>()
+            .HasOne(q => q.Order)
+            .WithOne()
+            .HasForeignKey<Queue>(q => q.OrderId);
+
+        modelBuilder.Entity<Transaction>(entity =>
+        {
+            entity.HasKey(e => e.TransactionId);
+            entity.Property(e => e.TransactionId).HasColumnName("transactionId");
+            entity.HasOne(t => t.Order)
+                  .WithOne()
+                  .HasForeignKey<Transaction>(t => t.OrderId);
+            entity.ToTable("transactions");
         });
     }
 } 
