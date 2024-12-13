@@ -53,9 +53,9 @@ namespace Server.Controller
                 var textColor = XBrushes.Black;
 
                 // Draw header
-                gfx.DrawString("UMak Cooperative", titleFont, textColor, 50, 50);
-                gfx.DrawString("Staff Report", subtitleFont, textColor, 50, 70);
-                gfx.DrawString($"Generated on: {DateTime.Now:MMMM dd, yyyy}", regularFont, textColor, 50, 90);
+                gfx.DrawString("UMAK Coop Queueing System", titleFont, textColor, 40, 50);
+                gfx.DrawString("Staff Report", subtitleFont, textColor, 40, 70);
+                gfx.DrawString($"Generated on: {DateTime.Now:MMMM dd, yyyy}", regularFont, textColor, 40, 90);
 
                 // Draw table header
                 var startY = 120;
@@ -145,7 +145,7 @@ namespace Server.Controller
                 var textColor = XBrushes.Black;
 
                 // Draw header
-                gfx.DrawString("UMak Cooperative", titleFont, textColor, 40, 50);
+                gfx.DrawString("UMAK Coop Queueing System", titleFont, textColor, 40, 50);
                 gfx.DrawString("Device Report", subtitleFont, textColor, 40, 70);
                 gfx.DrawString($"Generated on: {DateTime.Now:MMMM dd, yyyy}", regularFont, textColor, 40, 90);
 
@@ -255,7 +255,7 @@ namespace Server.Controller
                 var textColor = XBrushes.Black;
 
                 // Draw header
-                gfx.DrawString("UMak Cooperative", titleFont, textColor, 40, 50);
+                gfx.DrawString("UMAK Coop Queueing System", titleFont, textColor, 40, 50);
                 gfx.DrawString("Inventory Report", subtitleFont, textColor, 40, 70);
                 gfx.DrawString($"Generated on: {DateTime.Now:MMMM dd, yyyy}", regularFont, textColor, 40, 90);
 
@@ -395,7 +395,7 @@ namespace Server.Controller
                 var textColor = XBrushes.Black;
 
                 // Draw header
-                gfx.DrawString("UMak Cooperative", titleFont, textColor, 40, 50);
+                gfx.DrawString("UMAK Coop Queueing System", titleFont, textColor, 40, 50);
                 gfx.DrawString("Transaction Report", subtitleFont, textColor, 40, 70);
                 gfx.DrawString($"Generated on: {DateTime.Now:MMMM dd, yyyy}", regularFont, textColor, 40, 90);
 
