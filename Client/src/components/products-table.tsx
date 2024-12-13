@@ -37,7 +37,7 @@ import { MoreHorizontal, Plus, Upload, Package } from "lucide-react"
 import { formatDate } from "@/lib/utils"
 
 interface Product {
-  productId: number
+  id: number
   name: string
   description: string
   price: number
@@ -149,21 +149,25 @@ export function ProductsTable() {
       subject: formData.get("type") === "books" ? formData.get("subject")?.toString() : null,
       size: formData.get("type") === "uniforms" ? formData.get("size")?.toString() : null,
       schoolSupplyType: formData.get("type") === "school_supplies" ? formData.get("schoolSupplyType")?.toString() : null,
-      imageUrl: imagePreview || currentProduct.imageUrl // Use existing image if no new one uploaded
+      imageUrl: imagePreview || currentProduct.imageUrl
     }
 
     try {
-      const response = await fetch(`http://localhost:5272/api/products/${currentProduct.productId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-        body: JSON.stringify(productData),
-      })
+      const response = await fetch(
+        `http://localhost:5272/api/products/${currentProduct.id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify(productData),
+        }
+      )
 
       if (response.ok) {
         setIsEditDialogOpen(false)
+        setCurrentProduct(null)
         setImagePreview(null)
         fetchProducts()
       } else {
@@ -177,27 +181,35 @@ export function ProductsTable() {
   }
 
   const handleDelete = async () => {
-    if (!productToDelete) return
+    if (!productToDelete || !productToDelete.id) return;
 
     try {
       const response = await fetch(
-        `http://localhost:5272/api/products/${productToDelete.productId}`,
+        `http://localhost:5272/api/products/${productToDelete.id}`,
         {
           method: "DELETE",
           headers: {
+            "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         }
-      )
+      );
 
       if (response.ok) {
-        setIsDeleteDialogOpen(false)
-        fetchProducts()
+        setIsDeleteDialogOpen(false);
+        setProductToDelete(null);
+        fetchProducts();
+      } else {
+        alert("Failed to delete product");
       }
     } catch (error) {
-      console.error("Error deleting product:", error)
+      console.error("Error deleting product:", error);
+      alert("Failed to delete product");
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setProductToDelete(null);
     }
-  }
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -394,7 +406,7 @@ export function ProductsTable() {
           </TableHeader>
           <TableBody>
             {products.map((product) => (
-              <TableRow key={product.productId}>
+              <TableRow key={product.id}>
                 <TableCell>{product.name}</TableCell>
                 <TableCell>{product.description}</TableCell>
                 <TableCell>{formatPrice(product.price)}</TableCell>
@@ -450,9 +462,12 @@ export function ProductsTable() {
                         Edit
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => {
-                          setProductToDelete(product)
-                          setIsDeleteDialogOpen(true)
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          console.log("Product being set for deletion:", product);
+                          setProductToDelete(product);
+                          setIsDeleteDialogOpen(true);
                         }}
                         className="text-destructive hover:bg-destructive hover:text-destructive-foreground cursor-pointer"
                       >
@@ -606,13 +621,19 @@ export function ProductsTable() {
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+      <AlertDialog 
+        open={isDeleteDialogOpen} 
+        onOpenChange={(open) => {
+          if (!open) setProductToDelete(null);
+          setIsDeleteDialogOpen(open);
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete the
-              product {productToDelete?.name}.
+              product "{productToDelete?.name}".
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

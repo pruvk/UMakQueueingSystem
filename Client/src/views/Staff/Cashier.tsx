@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { MoreHorizontal } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface CashierStation {
   id: number
@@ -35,11 +36,28 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
+// Add a new interface for API responses
+interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  message?: string;
+}
+
+// Add this interface near the top with other interfaces
+interface QueueNumber {
+  id: number;
+  queueNumber: string;
+  status: 'waiting' | 'serving' | 'completed' | 'cancelled';
+  timestamp: string;
+}
+
 export default function Cashier() {
   const [cashiers, setCashiers] = useState<CashierStation[]>([])
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [cashierToDelete, setCashierToDelete] = useState<CashierStation | null>(null)
+  const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
+  const [queueToCancel, setQueueToCancel] = useState<{cashierId: number, queueNumber: string} | null>(null);
 
   // Add useEffect to fetch cashiers on component mount
   useEffect(() => { 
@@ -48,20 +66,31 @@ export default function Cashier() {
 
   const fetchCashiers = async () => {
     try {
-      const response = await fetch("http://localhost:5272/api/cashier")
-      if (response.ok) {
-        const data = await response.json()
-        setCashiers(data)
-      }
+        const response = await fetch('http://localhost:5272/api/cashier', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('Fetched cashiers:', data);
+        setCashiers(data);
     } catch (error) {
-      console.error('Error fetching cashiers:', error)
+        console.error('Error fetching cashiers:', error);
     }
   }
 
   const handleAddCashier = async () => {
     if (cashiers.length >= 9) {
-      alert("Maximum number of cashiers reached")
-      return
+      alert("Maximum number of cashiers reached");
+      return;
     }
 
     // Find the next available number by checking existing cashier names
@@ -83,50 +112,177 @@ export default function Cashier() {
     }
 
     try {
-      const response = await fetch("http://localhost:5272/api/cashier", {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newCashier)
-      })
+        const response = await fetch("http://localhost:5272/api/cashier", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify(newCashier)
+        });
 
-      if (response.ok) {
-        await fetchCashiers() // Refresh the list
-        setIsAddModalOpen(false)
-      }
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error('Server error:', errorData);
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        await fetchCashiers();
+        setIsAddModalOpen(false);
     } catch (error) {
-      console.error('Error adding cashier:', error)
+        console.error('Error adding cashier:', error);
     }
   }
 
-  const handleNext = (cashierId: number) => {
-    setCashiers(cashiers.map(cashier => {
-      if (cashier.id === cashierId) {
-        // Generate next number logic here
-        const nextNumber = String(parseInt(cashier.currentNumber) + 1).padStart(4, '0')
-        return { ...cashier, currentNumber: nextNumber }
+  const handleNext = async (cashierId: number) => {
+    try {
+        // First check if cashier exists and is active
+        const cashier = cashiers.find(c => c.id === cashierId);
+        if (!cashier) {
+            alert("Cashier not found");
+            return;
+        }
+
+        console.log('Cashier found:', cashier);
+
+        // Use the cashier's actual Id instead of CashierId
+        const response = await fetch(`http://localhost:5272/api/cashier/queue/next/${cashier.id}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        console.log('Response status:', response.status);
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || "Failed to get next customer");
+        }
+
+        if (!data.success) {
+            alert(data.message || "No customers waiting in line");
+            return;
+        }
+
+        await fetchCashiers();
+    } catch (error) {
+        console.error('Error getting next customer:', error);
+        alert(error instanceof Error ? error.message : "Error getting next customer");
+    }
+  }
+
+  const handleDone = async (cashierId: number) => {
+    try {
+        const cashier = cashiers.find(c => c.id === cashierId);
+        if (!cashier || cashier.currentNumber === "0000") {
+            alert("No active queue to complete");
+            return;
+        }
+
+        const response = await fetch(`http://localhost:5272/api/Queue/${cashier.currentNumber}/complete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || "Failed to complete queue");
+        }
+
+        await fetchCashiers(); // Refresh cashier list
+    } catch (error) {
+        console.error('Error completing service:', error);
+        alert("Error completing service: " + (error instanceof Error ? error.message : "Unknown error"));
+    }
+  }
+
+  const handleCancel = async (cashierId: number) => {
+    const cashier = cashiers.find(c => c.id === cashierId);
+    if (!cashier || cashier.currentNumber === "0000") {
+        alert("No active queue to cancel");
+        return;
+    }
+
+    setQueueToCancel({ cashierId, queueNumber: cashier.currentNumber });
+    setIsCancelDialogOpen(true);
+  }
+
+  const confirmCancel = async () => {
+    if (!queueToCancel) return;
+
+    try {
+        const response = await fetch(`http://localhost:5272/api/queue/${queueToCancel.queueNumber}/cancel`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || "Failed to cancel queue");
+        }
+
+        await fetchCashiers();
+    } catch (error) {
+        console.error('Error cancelling service:', error);
+        alert("Error cancelling service: " + (error instanceof Error ? error.message : "Unknown error"));
+    } finally {
+        setIsCancelDialogOpen(false);
+        setQueueToCancel(null);
+    }
+  }
+
+  const handleSetActive = async (cashierId: number) => {
+    try {
+      const response = await fetch(`http://localhost:5272/api/cashier/${cashierId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ status: 'active' })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      return cashier
-    }))
+
+      await fetchCashiers();
+    } catch (error) {
+      console.error('Error setting cashier active:', error);
+      alert("Error updating cashier status");
+    }
   }
 
-  const handleDone = (cashierId: number) => {
-    // Implement done logic
-  }
+  const handleSetInactive = async (cashierId: number) => {
+    try {
+      const response = await fetch(`http://localhost:5272/api/cashier/${cashierId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ status: 'inactive' })
+      });
 
-  const handleCancel = (cashierId: number) => {
-    // Implement cancel logic
-  }
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-  const handleSetActive = (cashierId: number) => {
-    // Implement active logic
-    console.log('Set active:', cashierId)
-  }
-
-  const handleSetInactive = (cashierId: number) => {
-    // Implement inactive logic
-    console.log('Set inactive:', cashierId)
+      await fetchCashiers();
+    } catch (error) {
+      console.error('Error setting cashier inactive:', error);
+      alert("Error updating cashier status");
+    }
   }
 
   const handleRemove = (cashierId: number) => {
@@ -147,13 +303,15 @@ export default function Cashier() {
           }
         });
 
-        if (response.ok) {
-          await fetchCashiers() // Refresh the list
-          setIsDeleteDialogOpen(false)
-          setCashierToDelete(null)
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
+
+        await fetchCashiers();
+        setIsDeleteDialogOpen(false);
+        setCashierToDelete(null);
       } catch (error) {
-        console.error('Error deleting cashier:', error)
+        console.error('Error deleting cashier:', error);
       }
     }
   }
@@ -204,11 +362,20 @@ export default function Cashier() {
           .map((cashier) => (
             <div
               key={cashier.id}
-              className="p-6 rounded-xl bg-card border shadow-sm"
+              className={cn(
+                "p-6 rounded-xl border shadow-sm",
+                cashier.status === 'inactive' ? 'opacity-50' : '',
+                "bg-card"
+              )}
             >
               <div className="flex flex-col space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold">{cashier.name}</h3>
+                  <div>
+                    <h3 className="text-lg font-semibold">{cashier.name}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Status: {cashier.status === 'active' ? 'Active' : 'Inactive'}
+                    </p>
+                  </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="sm">
@@ -216,12 +383,15 @@ export default function Cashier() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleSetActive(cashier.id)}>
-                        Set Active
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleSetInactive(cashier.id)}>
-                        Set Inactive
-                      </DropdownMenuItem>
+                      {cashier.status === 'inactive' ? (
+                        <DropdownMenuItem onClick={() => handleSetActive(cashier.id)}>
+                          Set Active
+                        </DropdownMenuItem>
+                      ) : (
+                        <DropdownMenuItem onClick={() => handleSetInactive(cashier.id)}>
+                          Set Inactive
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem 
                         onClick={() => handleRemove(cashier.id)}
                         className="text-red-600"
@@ -243,6 +413,7 @@ export default function Cashier() {
                   <Button 
                     className="flex-1" 
                     onClick={() => handleNext(cashier.id)}
+                    disabled={cashier.status === 'inactive'}
                   >
                     Next
                   </Button>
@@ -250,6 +421,7 @@ export default function Cashier() {
                     variant="outline" 
                     className="flex-1"
                     onClick={() => handleDone(cashier.id)}
+                    disabled={cashier.status === 'inactive' || cashier.currentNumber === '0000'}
                   >
                     Complete
                   </Button>
@@ -257,6 +429,7 @@ export default function Cashier() {
                     variant="outline" 
                     className="flex-1"
                     onClick={() => handleCancel(cashier.id)}
+                    disabled={cashier.status === 'inactive' || cashier.currentNumber === '0000'}
                   >
                     Cancel
                   </Button>
@@ -284,6 +457,27 @@ export default function Cashier() {
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Cancel Queue</AlertDialogTitle>
+                <AlertDialogDescription>
+                    Are you sure you want to cancel queue number {queueToCancel?.queueNumber}? 
+                    This action cannot be undone.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction 
+                    onClick={confirmCancel}
+                    className="bg-red-600 hover:bg-red-700"
+                >
+                    Confirm Cancel
+                </AlertDialogAction>
+            </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>

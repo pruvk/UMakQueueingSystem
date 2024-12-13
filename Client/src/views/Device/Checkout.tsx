@@ -31,8 +31,18 @@ export default function Checkout() {
     setError(null)
 
     try {
-      const deviceId = localStorage.getItem('deviceId')
-      if (!deviceId) throw new Error("Device not authenticated")
+      const token = localStorage.getItem('token')
+      if (!token) throw new Error("Not authenticated")
+      
+      const decoded = JSON.parse(atob(token.split('.')[1]))
+      console.log('Decoded token:', decoded)
+      
+      // Get deviceId from JWT token claims
+      const deviceId = decoded.nameid || decoded.sub || decoded.id || decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier']
+      
+      console.log('Found deviceId:', deviceId)
+      
+      if (!deviceId) throw new Error("Device ID not found")
 
       const orderData = {
         deviceId: parseInt(deviceId),
@@ -52,10 +62,43 @@ export default function Checkout() {
         paymentMethod
       }
 
-      // Add your order submission logic here
+      const response = await fetch('http://localhost:5272/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(orderData)
+      })
+
+      if (!response.ok) {
+        const text = await response.text()
+        try {
+          const errorData = JSON.parse(text)
+          throw new Error(errorData.message || 'Failed to create order')
+        } catch (e) {
+          throw new Error(`Server error: ${text}`)
+        }
+      }
+
+      const orderResponse = await response.json()
+      
+      // Store all data before navigation
+      const queueNumber = `A${orderResponse.orderId.toString().padStart(3, '0')}`
+      localStorage.setItem('orderItems', JSON.stringify(items))
+      localStorage.setItem('orderTotal', total.toString())
+      localStorage.setItem('queueNumber', queueNumber)
+
+      // Clear cart first
       clearCart()
-      navigate('/device')
+
+      // Use setTimeout to delay navigation slightly
+      setTimeout(() => {
+        navigate('/device/queue-confirmation')
+      }, 0)
+
     } catch (err) {
+      console.error('Order submission error:', err)
       setError(err instanceof Error ? err.message : "Failed to submit order")
     } finally {
       setIsSubmitting(false)

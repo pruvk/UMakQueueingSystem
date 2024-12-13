@@ -17,6 +17,7 @@ import DeviceLayout from './views/Device/Catalog'
 import { CartProvider } from "@/contexts/CartContext"
 import { Toaster } from "@/components/ui/toaster"
 import Display from './views/Staff/Display'
+import QueueConfirmation from "@/views/Device/QueueConfirmation"
 
 // Protected Route components
 const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
@@ -102,7 +103,7 @@ function App() {
             </Route>
             
             {/* Staff Routes */}
-            <Route path="/staff" element={<ProtectedStaffRoute><StaffLayout /></ProtectedStaffRoute>}>
+            <Route path="/staff/*" element={<ProtectedStaffRoute><StaffLayout /></ProtectedStaffRoute>}>
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="cashier" element={<Cashier />} />
               <Route path="display" element={<Display />} />
@@ -110,10 +111,28 @@ function App() {
               <Route path="" element={<Navigate to="/staff/dashboard" replace />} />
             </Route>
             
-            {/* Device Routes */}
-            <Route path="/device/*" element={<ProtectedDeviceRoute><DeviceLayout /></ProtectedDeviceRoute>} />
-            <Route path="/device/checkout" element={<ProtectedDeviceRoute><Checkout /></ProtectedDeviceRoute>} />
-            <Route path="/device/cart" element={<ProtectedDeviceRoute><Cart /></ProtectedDeviceRoute>} />
+            {/* Device Routes - Order matters! */}
+            <Route path="/device/queue-confirmation" element={
+              <ProtectedDeviceRoute>
+                <QueueConfirmation />
+              </ProtectedDeviceRoute>
+            } />
+            <Route path="/device/checkout" element={
+              <ProtectedDeviceRoute>
+                <Checkout />
+              </ProtectedDeviceRoute>
+            } />
+            <Route path="/device/cart" element={
+              <ProtectedDeviceRoute>
+                <Cart />
+              </ProtectedDeviceRoute>
+            } />
+            {/* This catch-all route must be last */}
+            <Route path="/device/*" element={
+              <ProtectedDeviceRoute>
+                <DeviceLayout />
+              </ProtectedDeviceRoute>
+            } />
 
             <Route path="/" element={<Navigate to="/login" replace />} />
           </Routes>
