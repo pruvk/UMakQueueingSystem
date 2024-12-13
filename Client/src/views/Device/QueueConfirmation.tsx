@@ -18,6 +18,7 @@ interface CustomerInfo {
   name: string
   studentId: string
   contactNumber: string
+  professor: string | null
 }
 
 export default function QueueConfirmation() {
@@ -126,6 +127,12 @@ export default function QueueConfirmation() {
                   <span className="text-muted-foreground">Contact:</span>
                   <span className="col-span-2 font-medium text-right">{customerInfo.contactNumber}</span>
                 </div>
+                {customerInfo.professor && (
+                  <div className="grid grid-cols-3 gap-1">
+                    <span className="text-muted-foreground">Professor:</span>
+                    <span className="col-span-2 font-medium text-right">{customerInfo.professor}</span>
+                  </div>
+                )}
               </div>
             )}
 

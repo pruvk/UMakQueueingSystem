@@ -21,9 +21,11 @@ export default function Checkout() {
   const [professor, setProfessor] = useState("")
   const [paymentMethod, setPaymentMethod] = useState("cash")
 
+  const hasBooks = items.some(item => item.type === "books")
+
   const handleSubmitOrder = async () => {
-    if (!customerName || !studentId || !contactNumber || !professor) {
-      setError("Please fill in all fields")
+    if (!customerName || !studentId || !contactNumber || (hasBooks && !professor)) {
+      setError("Please fill in all required fields")
       return
     }
 
@@ -84,10 +86,18 @@ export default function Checkout() {
       const orderResponse = await response.json()
       
       // Store all data before navigation
+      const customerInfo = {
+        name: customerName,
+        studentId,
+        contactNumber,
+        professor: hasBooks ? professor : null
+      }
+
       const queueNumber = `A${orderResponse.orderId.toString().padStart(3, '0')}`
       localStorage.setItem('orderItems', JSON.stringify(items))
       localStorage.setItem('orderTotal', total.toString())
       localStorage.setItem('queueNumber', queueNumber)
+      localStorage.setItem('customerInfo', JSON.stringify(customerInfo))
 
       // Clear cart first
       clearCart()
@@ -177,16 +187,21 @@ export default function Checkout() {
                       />
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="professor">Professor</Label>
-                      <Input
-                        id="professor"
-                        placeholder="Prof. Juan Dela Cruz"
-                        value={professor}
-                        onChange={(e) => setProfessor(e.target.value)}
-                        className="transition-all focus:ring-2 focus:ring-primary/20"
-                      />
-                    </div>
+                    {hasBooks && (
+                      <div className="space-y-2">
+                        <Label htmlFor="professor">Professor</Label>
+                        <Input
+                          id="professor"
+                          placeholder="Prof. Juan Dela Cruz"
+                          value={professor}
+                          onChange={(e) => setProfessor(e.target.value)}
+                          className="transition-all focus:ring-2 focus:ring-primary/20"
+                        />
+                        <p className="text-sm text-muted-foreground">
+                          Required for book purchases
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
