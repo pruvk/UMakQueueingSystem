@@ -94,32 +94,34 @@ export function LoginForm() {
   }
 
   return (
-    <div className="relative">
-      <ModeToggle className="absolute top-4 right-4" />
-      <Card className="mx-auto max-w-7xl">
-        <CardHeader>
-          <CardTitle className="text-2xl">Login</CardTitle>
-          <CardDescription>
-            Choose your login type below
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+    <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[400px]">
+      <div className="flex flex-col space-y-2 text-center">
+        <h1 className="text-3xl font-bold tracking-tight">
+          Welcome Back
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Sign in to access the cooperative store management system
+        </p>
+      </div>
+      <Card className="border-2">
+        <CardContent className="pt-6">
           <Tabs defaultValue="user" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="user">User Login</TabsTrigger>
-              <TabsTrigger value="device">Device Login</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="user" className="font-medium">Staff Access</TabsTrigger>
+              <TabsTrigger value="device" className="font-medium">Kiosk Terminal</TabsTrigger>
             </TabsList>
             
             <TabsContent value="user">
-              <form onSubmit={handleUserLogin} className="space-y-4 mt-4">
+              <form onSubmit={handleUserLogin} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="username">Username</Label>
+                  <Label htmlFor="username">Staff ID</Label>
                   <Input
                     id="username"
                     type="text"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Enter your username"
+                    placeholder="Enter your staff ID"
+                    className="border-input bg-background"
                     required
                   />
                 </div>
@@ -130,11 +132,12 @@ export function LoginForm() {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    className="border-input bg-background"
                     required
                   />
                 </div>
                 {userError && (
-                  <div className="text-sm text-red-500">
+                  <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
                     {userError}
                   </div>
                 )}
@@ -145,41 +148,49 @@ export function LoginForm() {
             </TabsContent>
             
             <TabsContent value="device">
-              <form onSubmit={handleDeviceLogin} className="space-y-4 mt-4">
+              <form onSubmit={handleDeviceLogin} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="deviceUsername">Device Username</Label>
+                  <Label htmlFor="deviceUsername">Terminal ID</Label>
                   <Input
                     id="deviceUsername"
                     type="text"
                     value={deviceUsername}
                     onChange={(e) => setDeviceUsername(e.target.value)}
-                    placeholder="Enter device username"
+                    placeholder="Enter terminal ID"
+                    className="border-input bg-background"
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="devicePassword">Device Password</Label>
+                  <Label htmlFor="devicePassword">Access Code</Label>
                   <Input
                     id="devicePassword"
                     type="password"
                     value={devicePassword}
                     onChange={(e) => setDevicePassword(e.target.value)}
+                    className="border-input bg-background"
                     required
                   />
                 </div>
                 {deviceError && (
-                  <div className="text-sm text-red-500">
+                  <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
                     {deviceError}
                   </div>
                 )}
                 <Button type="submit" className="w-full">
-                  Connect Device
+                  Initialize Terminal
                 </Button>
               </form>
             </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
+      <p className="px-8 text-center text-sm text-muted-foreground">
+        <a href="#" className="hover:text-primary underline underline-offset-4">
+          Need help? Contact IT Support
+        </a>
+      </p>
+      <ModeToggle className="absolute top-4 right-4" />
     </div>
   )
 }

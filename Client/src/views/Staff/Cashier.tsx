@@ -62,6 +62,11 @@ export default function Cashier() {
     queueNumber: string,
     queueId: number
   } | null>(null);
+  const [isCompleteDialogOpen, setIsCompleteDialogOpen] = useState(false);
+  const [queueToComplete, setQueueToComplete] = useState<{
+    cashierId: number, 
+    queueNumber: string
+  } | null>(null);
 
   // Add useEffect to fetch cashiers on component mount
   useEffect(() => { 
@@ -148,9 +153,14 @@ export default function Cashier() {
             return;
         }
 
+        // Check if there's a current customer that hasn't been completed or cancelled
+        if (cashier.currentNumber !== "0000") {
+            alert("Please complete or cancel the current customer's transaction before calling the next one");
+            return;
+        }
+
         console.log('Cashier found:', cashier);
 
-        // Use the cashier's actual Id instead of CashierId
         const response = await fetch(`http://localhost:5272/api/cashier/queue/next/${cashier.id}`, {
             method: 'GET',
             headers: {
@@ -180,14 +190,24 @@ export default function Cashier() {
   }
 
   const handleDone = async (cashierId: number) => {
-    try {
-        const cashier = cashiers.find(c => c.id === cashierId);
-        if (!cashier || cashier.currentNumber === "0000") {
-            alert("No active queue to complete");
-            return;
-        }
+    const cashier = cashiers.find(c => c.id === cashierId);
+    if (!cashier || cashier.currentNumber === "0000") {
+        alert("No active queue to complete");
+        return;
+    }
 
-        const response = await fetch(`http://localhost:5272/api/Queue/${cashier.currentNumber}/complete`, {
+    setQueueToComplete({ 
+        cashierId, 
+        queueNumber: cashier.currentNumber
+    });
+    setIsCompleteDialogOpen(true);
+  }
+
+  const confirmComplete = async () => {
+    if (!queueToComplete) return;
+
+    try {
+        const response = await fetch(`http://localhost:5272/api/Queue/${queueToComplete.queueNumber}/complete`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -200,10 +220,13 @@ export default function Cashier() {
             throw new Error(errorData.message || "Failed to complete queue");
         }
 
-        await fetchCashiers(); // Refresh cashier list
+        await fetchCashiers();
     } catch (error) {
         console.error('Error completing service:', error);
         alert("Error completing service: " + (error instanceof Error ? error.message : "Unknown error"));
+    } finally {
+        setIsCompleteDialogOpen(false);
+        setQueueToComplete(null);
     }
   }
 
@@ -328,6 +351,11 @@ export default function Cashier() {
     }
   };
 
+  // Add this helper function near the top of your component
+  const isServingCustomer = (currentNumber: string) => {
+    return currentNumber !== "0000";
+  }
+
   return (
     <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
       <div className="flex items-center justify-between space-y-2">
@@ -425,23 +453,24 @@ export default function Cashier() {
                   <Button 
                     className="flex-1" 
                     onClick={() => handleNext(cashier.id)}
-                    disabled={cashier.status === 'inactive'}
+                    disabled={cashier.status === 'inactive' || isServingCustomer(cashier.currentNumber)}
+                    variant={isServingCustomer(cashier.currentNumber) ? "ghost" : "default"}
                   >
                     Next
                   </Button>
                   <Button 
-                    variant="outline" 
+                    variant={isServingCustomer(cashier.currentNumber) ? "default" : "ghost"} 
                     className="flex-1"
                     onClick={() => handleDone(cashier.id)}
-                    disabled={cashier.status === 'inactive' || cashier.currentNumber === '0000'}
+                    disabled={cashier.status === 'inactive' || !isServingCustomer(cashier.currentNumber)}
                   >
                     Complete
                   </Button>
                   <Button 
-                    variant="outline" 
+                    variant={isServingCustomer(cashier.currentNumber) ? "default" : "ghost"}
                     className="flex-1"
                     onClick={() => handleCancel(cashier.id)}
-                    disabled={cashier.status === 'inactive' || cashier.currentNumber === '0000'}
+                    disabled={cashier.status === 'inactive' || !isServingCustomer(cashier.currentNumber)}
                   >
                     Cancel
                   </Button>
@@ -488,6 +517,27 @@ export default function Cashier() {
                     className="bg-red-600 hover:bg-red-700"
                 >
                     Confirm Cancel
+                </AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={isCompleteDialogOpen} onOpenChange={setIsCompleteDialogOpen}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Complete Transaction</AlertDialogTitle>
+                <AlertDialogDescription>
+                    Are you sure you want to complete the transaction for queue number {queueToComplete?.queueNumber}? 
+                    This action cannot be undone.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction 
+                    onClick={confirmComplete}
+                    className="bg-green-600 hover:bg-green-700"
+                >
+                    Confirm Complete
                 </AlertDialogAction>
             </AlertDialogFooter>
         </AlertDialogContent>
