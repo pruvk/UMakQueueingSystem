@@ -39,13 +39,17 @@ namespace Server.Controller
                         t.OrderId,
                         Order = t.Order == null ? null : new
                         {
-                            t.Order.Total,
+                            Total = t.Order.Total,
                             CustomerInfo = new
                             {
-                                t.Order.CustomerInfo.Name,
-                                t.Order.CustomerInfo.StudentId
+                                Name = t.Order.CustomerInfo == null ? "Unknown" : 
+                                      string.IsNullOrEmpty(t.Order.CustomerInfo.Name) ? "Unknown" : 
+                                      t.Order.CustomerInfo.Name,
+                                StudentId = t.Order.CustomerInfo == null ? "Unknown" : 
+                                          string.IsNullOrEmpty(t.Order.CustomerInfo.StudentId) ? "Unknown" : 
+                                          t.Order.CustomerInfo.StudentId
                             },
-                            t.Order.PaymentMethod
+                            PaymentMethod = string.IsNullOrEmpty(t.Order.PaymentMethod) ? "Unknown" : t.Order.PaymentMethod
                         }
                     })
                     .ToListAsync();

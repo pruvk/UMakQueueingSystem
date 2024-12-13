@@ -104,6 +104,9 @@ public class AuthDbContext : DbContext
             entity.HasOne(t => t.Order)
                   .WithOne()
                   .HasForeignKey<Transaction>(t => t.OrderId);
+            entity.HasOne(t => t.Queue)
+                  .WithOne(q => q.Transaction)
+                  .HasForeignKey<Transaction>(t => t.QueueId);
             entity.ToTable("transactions");
         });
     }

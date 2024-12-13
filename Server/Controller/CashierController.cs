@@ -65,6 +65,16 @@ namespace Server.Controller
                     });
                 }
 
+                if (queue.OrderId == null)
+                {
+                    return BadRequest(new ApiResponse<string>
+                    {
+                        Success = false,
+                        Message = "Queue has no associated order",
+                        Data = default
+                    });
+                }
+
                 // Create transaction record
                 var transaction = new Transaction
                 {
@@ -72,7 +82,7 @@ namespace Server.Controller
                     Status = "completed",
                     CompletedAt = DateTime.UtcNow,
                     CompletedBy = username ?? "unknown",
-                    OrderId = queue.OrderId
+                    OrderId = queue.OrderId.Value
                 };
 
                 _context.Transactions.Add(transaction);
@@ -129,6 +139,16 @@ namespace Server.Controller
                     });
                 }
 
+                if (queue.OrderId == null)
+                {
+                    return BadRequest(new ApiResponse<string>
+                    {
+                        Success = false,
+                        Message = "Queue has no associated order",
+                        Data = default
+                    });
+                }
+
                 // Create transaction record for cancelled transaction
                 var transaction = new Transaction
                 {
@@ -136,7 +156,7 @@ namespace Server.Controller
                     Status = "cancelled",
                     CompletedAt = DateTime.UtcNow,
                     CompletedBy = username ?? "unknown",
-                    OrderId = queue.OrderId
+                    OrderId = queue.OrderId.Value
                 };
 
                 _context.Transactions.Add(transaction);
